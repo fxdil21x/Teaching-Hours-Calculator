@@ -1,336 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teaching Hours Tracker</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(45deg, #6a11cb, #2575fc);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            flex-direction: column;
-            text-align: center;
-        }
-        .container {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 900px;
-            text-align: center;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        .tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #fff;
-        }
-        .tab {
-            background-color: #6a11cb;
-            color: #fff;
-            padding: 14px 30px;
-            margin: 0 15px;
-            cursor: pointer;
-            border-radius: 8px 8px 0 0;
-            font-size: 1.2rem;
-            transition: background-color 0.3s;
-        }
-        .tab:hover, .tab.active {
-            background-color: #2575fc;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        input, select, button {
-            width: 80%;
-            padding: 12px;
-            margin: 12px 0;
-            font-size: 1.1rem;
-            border-radius: 10px;
-            border: none;
-            background-color: #f0f0f0;
-            color: #333;
-        }
-        button {
-            background-color: #2575fc;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            padding: 14px;
-        }
-        button:hover {
-            background-color: #6a11cb;
-            transform: scale(1.05);
-        }
-        .result {
-            margin-top: 20px;
-            font-size: 1.3rem;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 12px;
-            border-radius: 12px;
-            color: #FFD700;
-        }
-        .entry-list {
-            margin-top: 30px;
-            padding-left: 15px;
-            text-align: left;
-            max-height: 300px;
-            overflow-y: auto;
-            text-align: center;
-        }
-        .entry-item {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-align: left;
-        }
-        .entry-item button {
-            background-color: #e74c3c;
-            padding: 6px 12px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            border-radius: 8px;
-            border: none;
-        }
-        .entry-item button:hover {
-            background-color: #c0392b;
-        }
-        select {
-            font-size: 1.1rem;
-            padding: 12px;
-            margin-bottom: 20px;
-            width: 85%;
-            text-align: center;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        label {
-            margin-bottom: 10px;
-        }
-        .footer {
-            font-size: 1rem;
-            margin-top: 40px;
-            color: #f0f0f0;
-            text-align: center;
-        }
-        .footer span {
-            font-weight: bold;
-            color: #FFD700;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teaching Hours Calculator</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(45deg, #6a11cb, #2575fc);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.85);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #FFD700;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      margin-bottom: 15px;
+      color: #f0f0f0;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #fff;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      background-color: #6a11cb;
+      color: #fff;
+      padding: 12px 24px;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      font-size: 1.1rem;
+      transition: background-color 0.3s;
+    }
+
+    .tab:hover,
+    .tab.active {
+      background-color: #2575fc;
+    }
+
+    .tab-content {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    input, select, button {
+      width: 80%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    button {
+      background-color: #2575fc;
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #6a11cb;
+      transform: scale(1.05);
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px;
+      border-radius: 12px;
+      color: #FFD700;
+    }
+
+    .entry-list {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .entry-item {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .entry-item button {
+      background-color: #e74c3c;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: none;
+    }
+
+    .entry-item button:hover {
+      background-color: #c0392b;
+    }
+
+    .footer {
+      font-size: 1rem;
+      margin-top: 30px;
+      color: #f0f0f0;
+      text-align: center;
+    }
+
+    .footer span {
+      font-weight: bold;
+      color: #FFD700;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .tab {
+        flex: 1;
+        text-align: center;
+      }
+
+      input, select, button {
+        width: 95%;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Teaching Hours Tracker</h1>
+  <div class="container">
+    <h1>Teaching Hours Calculator</h1>
 
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('today')">Calculate Hours</div>
-            <div class="tab" onclick="showTab('monthly')">Monthly Tracker</div>
-        </div>
-
-        <!-- Today's Hours Section -->
-        <div id="today" class="tab-content active">
-            <h2>Calculate Total Hours</h2>
-            <form id="todayForm">
-                <div class="form-group">
-                    <label for="date">Select Date:</label>
-                    <input type="date" id="date" name="date" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="fromTime">From Time:</label>
-                    <input type="time" id="fromTime" name="fromTime" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="toTime">To Time:</label>
-                    <input type="time" id="toTime" name="toTime" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="breakTime">Break Time (in minutes):</label>
-                    <input type="number" id="breakTime" name="breakTime" min="0" required>
-                </div>
-
-                <button type="button" onclick="calculateTotalHours()">Calculate Total Hours</button>
-            </form>
-
-            <div id="result" class="result">
-                <p>Total Teaching Hours: <span id="totalHours">0</span></p>
-                <p>Date: <span id="selectedDate"></span></p>
-                <button type="button" onclick="addToMonthlyRecord()">Add to Monthly Record</button>
-            </div>
-        </div>
-
-        <!-- Monthly Tracker Section -->
-        <div id="monthly" class="tab-content">
-            <h2>Monthly Tracker</h2>
-
-            <label for="monthSelect">Select Month:</label>
-            <select id="monthSelect">
-                <option value="January">January</option>
-                <option value="February">February</option>
-                <option value="March">March</option>
-                <option value="April">April</option>
-                <option value="May">May</option>
-                <option value="June">June</option>
-                <option value="July">July</option>
-                <option value="August">August</option>
-                <option value="September">September</option>
-                <option value="October">October</option>
-                <option value="November">November</option>
-                <option value="December">December</option>
-            </select>
-
-            <div id="monthlyResult">
-                <p>Total Teaching Hours for <span id="monthName">January</span>: <span id="monthlyTotal">0</span></p>
-            </div>
-
-            <div class="entry-list" id="monthlyEntryList"></div>
-        </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="today">Calculate Hours</div>
+      <div class="tab" data-tab="monthly">Monthly Tracker</div>
     </div>
 
-    <div class="footer">
-        <p>Created by <span>Fadil Rafeek CMA</span></p>
+    <!-- Calculate Hours -->
+    <div id="today" class="tab-content active">
+      <h2>Calculate Total Hours</h2>
+      <form id="todayForm">
+        <div>
+          <label for="date">Select Date:</label><br>
+          <input type="date" id="date" required>
+        </div>
+
+        <div>
+          <label for="fromTime">From Time:</label><br>
+          <input type="time" id="fromTime" required>
+        </div>
+
+        <div>
+          <label for="toTime">To Time:</label><br>
+          <input type="time" id="toTime" required>
+        </div>
+
+        <div>
+          <label for="breakTime">Break Time (minutes):</label><br>
+          <input type="number" id="breakTime" min="0" required>
+        </div>
+
+        <button type="button" onclick="calculateTotalHours()">Calculate</button>
+      </form>
+
+      <div id="result" class="result">
+        <p>Total Teaching Hours: <span id="totalHours">0</span></p>
+        <p>Date: <span id="selectedDate"></span></p>
+        <button type="button" onclick="addToMonthlyRecord()">Add to Monthly Record</button>
+      </div>
     </div>
 
-    <script>
-        let monthlyEntries = JSON.parse(localStorage.getItem('monthlyEntries')) || {};
-        let todayData = JSON.parse(localStorage.getItem('todayData')) || {};
+    <!-- Monthly Tracker -->
+    <div id="monthly" class="tab-content">
+      <h2>Monthly Tracker</h2>
+      <label for="monthSelect">Select Month:</label>
+      <select id="monthSelect"></select>
 
-        // Switch between the tabs
-        function showTab(tabName) {
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
+      <div id="monthlyResult">
+        <p>Total Teaching Hours for <span id="monthName"></span>: <span id="monthlyTotal">0</span></p>
+      </div>
 
-            tabs.forEach(tab => tab.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
+      <div class="entry-list" id="monthlyEntryList"></div>
+    </div>
+  </div>
 
-            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(tabName).classList.add('active');
-        }
+  <div class="footer">
+    <p>Created by <span>Fadil Rafeek CMA</span></p>
+  </div>
 
-        // Calculate total hours
-        function calculateTotalHours() {
-            const date = document.getElementById('date').value;
-            const fromTime = document.getElementById('fromTime').value;
-            const toTime = document.getElementById('toTime').value;
-            const breakTime = document.getElementById('breakTime').value;
+  <script>
+    let monthlyEntries = JSON.parse(localStorage.getItem('monthlyEntries')) || {};
+    let todayData = {};
 
-            const from = new Date(`1970-01-01T${fromTime}:00`);
-            const to = new Date(`1970-01-01T${toTime}:00`);
+    // Tabs switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-            let totalMinutes = (to - from) / 60000;
-            totalMinutes -= parseInt(breakTime);
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
+    });
 
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
+    // Populate month dropdown
+    const monthSelect = document.getElementById('monthSelect');
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    months.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      monthSelect.appendChild(opt);
+    });
 
-            document.getElementById('totalHours').textContent = `${hours} hours ${minutes} minutes`;
-            document.getElementById('selectedDate').textContent = date;
+    function calculateTotalHours() {
+      const date = document.getElementById('date').value;
+      const fromTime = document.getElementById('fromTime').value;
+      const toTime = document.getElementById('toTime').value;
+      const breakTime = parseInt(document.getElementById('breakTime').value);
 
-            todayData = { date, totalHours: `${hours} hours ${minutes} minutes` };
-            localStorage.setItem('todayData', JSON.stringify(todayData));
-        }
+      if (!date || !fromTime || !toTime) {
+        alert("Please fill in all fields.");
+        return;
+      }
 
-        // Add today's entry to the monthly record
-        function addToMonthlyRecord() {
-            if (!todayData.date) {
-                alert("Please calculate today's hours first.");
-                return;
-            }
+      const from = new Date(`1970-01-01T${fromTime}:00`);
+      const to = new Date(`1970-01-01T${toTime}:00`);
 
-            const { date, totalHours } = todayData;
-            const month = new Date(date).toLocaleString('default', { month: 'long' });
+      let totalMinutes = (to - from) / 60000 - breakTime;
+      if (totalMinutes < 0) {
+        alert("Invalid time range.");
+        return;
+      }
 
-            if (!monthlyEntries[month]) {
-                monthlyEntries[month] = [];
-            }
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
 
-            const day = new Date(date).getDate();
-            monthlyEntries[month].push({ day, totalHours });
-            localStorage.setItem('monthlyEntries', JSON.stringify(monthlyEntries));
+      document.getElementById('totalHours').textContent = `${hours} hours ${minutes} minutes`;
+      document.getElementById('selectedDate').textContent = date;
 
-            updateMonthlyEntryList(month);
-            updateMonthlyTotal(month);
-        }
+      todayData = { date, minutes: totalMinutes };
+    }
 
-        // Update the monthly entry list
-        function updateMonthlyEntryList(month) {
-            const entryList = document.getElementById('monthlyEntryList');
-            entryList.innerHTML = '';
+    function addToMonthlyRecord() {
+      if (!todayData.date) {
+        alert("Please calculate today's hours first.");
+        return;
+      }
 
-            if (monthlyEntries[month]) {
-                monthlyEntries[month].forEach(entry => {
-                    const entryItem = document.createElement('div');
-                    entryItem.classList.add('entry-item');
-                    entryItem.innerHTML = `
-                        <span>Day ${entry.day}: ${entry.totalHours}</span>
-                        <button onclick="deleteEntry('${month}', ${entry.day})">Delete</button>
-                    `;
-                    entryList.appendChild(entryItem);
-                });
-            }
-        }
+      const dateObj = new Date(todayData.date);
+      const month = months[dateObj.getMonth()];
+      const day = dateObj.getDate();
 
-        // Delete a monthly entry
-        function deleteEntry(month, day) {
-            monthlyEntries[month] = monthlyEntries[month].filter(entry => entry.day !== day);
-            localStorage.setItem('monthlyEntries', JSON.stringify(monthlyEntries));
-            updateMonthlyEntryList(month);
-            updateMonthlyTotal(month);
-        }
+      if (!monthlyEntries[month]) {
+        monthlyEntries[month] = [];
+      }
 
-        // Update the monthly total hours
-        function updateMonthlyTotal(month) {
-            let totalMinutes = 0;
+      // Avoid duplicate entry for same day
+      monthlyEntries[month] = monthlyEntries[month].filter(e => e.day !== day);
+      monthlyEntries[month].push({ day, minutes: todayData.minutes });
 
-            if (monthlyEntries[month]) {
-                totalMinutes = monthlyEntries[month].reduce((sum, entry) => sum + parseInt(entry.totalHours.split(" ")[0]) * 60, 0);
-            }
+      localStorage.setItem('monthlyEntries', JSON.stringify(monthlyEntries));
 
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-            document.getElementById('monthlyTotal').textContent = `${hours} hours ${minutes} minutes`;
-            document.getElementById('monthName').textContent = month;
-        }
+      updateMonthlyEntryList(month);
+      updateMonthlyTotal(month);
+      monthSelect.value = month;
+    }
 
-        // Initialize the page by updating the entry list and total for the current month
-        document.getElementById('monthSelect').addEventListener('change', function() {
-            const selectedMonth = this.value;
-            updateMonthlyEntryList(selectedMonth);
-            updateMonthlyTotal(selectedMonth);
-        });
+    function updateMonthlyEntryList(month) {
+      const entryList = document.getElementById('monthlyEntryList');
+      entryList.innerHTML = '';
 
-        updateMonthlyEntryList("January");
-        updateMonthlyTotal("January");
-    </script>
+      if (monthlyEntries[month]) {
+        monthlyEntries[month]
+          .sort((a, b) => a.day - b.day)
+          .forEach(entry => {
+            const hours = Math.floor(entry.minutes / 60);
+            const minutes = entry.minutes % 60;
+            const entryItem = document.createElement('div');
+            entryItem.classList.add('entry-item');
+            entryItem.innerHTML = `
+              <span>Day ${entry.day}: ${hours}h ${minutes}m</span>
+              <button onclick="deleteEntry('${month}', ${entry.day})">Delete</button>
+            `;
+            entryList.appendChild(entryItem);
+          });
+      }
+    }
 
+    function deleteEntry(month, day) {
+      monthlyEntries[month] = monthlyEntries[month].filter(entry => entry.day !== day);
+      localStorage.setItem('monthlyEntries', JSON.stringify(monthlyEntries));
+      updateMonthlyEntryList(month);
+      updateMonthlyTotal(month);
+    }
+
+    function updateMonthlyTotal(month) {
+      let totalMinutes = 0;
+
+      if (monthlyEntries[month]) {
+        totalMinutes = monthlyEntries[month].reduce((sum, e) => sum + e.minutes, 0);
+      }
+
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      document.getElementById('monthlyTotal').textContent = `${hours} hours ${minutes} minutes`;
+      document.getElementById('monthName').textContent = month;
+    }
+
+    // Month dropdown change
+    monthSelect.addEventListener('change', function () {
+      const month = this.value;
+      updateMonthlyEntryList(month);
+      updateMonthlyTotal(month);
+    });
+
+    // Init with current month
+    const currentMonth = months[new Date().getMonth()];
+    monthSelect.value = currentMonth;
+    updateMonthlyEntryList(currentMonth);
+    updateMonthlyTotal(currentMonth);
+  </script>
 </body>
 </html>
