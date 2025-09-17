@@ -5,33 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teaching Hours Calculator</title>
   <style>
-    /* (your same CSS – unchanged) */
+    /* your existing styles unchanged */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Arial', sans-serif;
       background: linear-gradient(45deg, #6a11cb, #2575fc);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
+      color: white; display: flex; flex-direction: column;
+      align-items: center; min-height: 100vh; padding: 20px;
     }
-    .container { background: rgba(0, 0, 0, 0.85); padding: 30px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); width: 100%; max-width: 900px; text-align: center; }
+    .container {
+      background: rgba(0, 0, 0, 0.85); padding: 30px; border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3); width: 100%; max-width: 900px;
+      text-align: center;
+    }
     h1 { font-size: 2.4rem; margin-bottom: 15px; font-weight: bold; color: #FFD700; }
     h2 { font-size: 1.6rem; margin-bottom: 15px; color: #f0f0f0; }
-    .tabs { display: flex; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #fff; gap: 10px; flex-wrap: wrap; }
-    .tab { background-color: #6a11cb; color: #fff; padding: 12px 24px; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 1.1rem; transition: background-color 0.3s; }
+    .tabs { display: flex; justify-content: center; margin-bottom: 20px;
+      border-bottom: 2px solid #fff; gap: 10px; flex-wrap: wrap; }
+    .tab {
+      background-color: #6a11cb; color: #fff; padding: 12px 24px; cursor: pointer;
+      border-radius: 8px 8px 0 0; font-size: 1.1rem; transition: background-color 0.3s;
+    }
     .tab:hover, .tab.active { background-color: #2575fc; }
     .tab-content { display: none; margin-top: 20px; }
     .tab-content.active { display: block; }
-    input, select, button { width: 80%; padding: 12px; margin: 10px 0; font-size: 1rem; border-radius: 8px; border: none; background-color: #f0f0f0; color: #333; }
-    button { background-color: #2575fc; color: white; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease; }
+    input, select, button {
+      width: 80%; padding: 12px; margin: 10px 0; font-size: 1rem;
+      border-radius: 8px; border: none; background-color: #f0f0f0; color: #333;
+    }
+    button {
+      background-color: #2575fc; color: white; font-size: 1.1rem;
+      cursor: pointer; transition: all 0.3s ease;
+    }
     button:hover { background-color: #6a11cb; transform: scale(1.05); }
-    .result { margin-top: 20px; font-size: 1.2rem; background: rgba(0, 0, 0, 0.5); padding: 12px; border-radius: 12px; color: #FFD700; }
+    .result {
+      margin-top: 20px; font-size: 1.2rem; background: rgba(0,0,0,0.5);
+      padding: 12px; border-radius: 12px; color: #FFD700;
+    }
     .entry-list { margin-top: 20px; max-height: 300px; overflow-y: auto; text-align: left; }
-    .entry-item { background: rgba(0, 0, 0, 0.4); padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .entry-item button { background-color: #e74c3c; padding: 6px 10px; font-size: 0.9rem; border-radius: 6px; border: none; }
+    .entry-item {
+      background: rgba(0,0,0,0.4); padding: 12px; margin-bottom: 10px;
+      border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .entry-item button {
+      background-color: #e74c3c; padding: 6px 10px; font-size: 0.9rem;
+      border-radius: 6px; border: none;
+    }
     .entry-item button:hover { background-color: #c0392b; }
     .footer { font-size: 1rem; margin-top: 30px; color: #f0f0f0; text-align: center; }
     .footer span { font-weight: bold; color: #FFD700; }
@@ -49,7 +68,6 @@
     <div class="tabs">
       <div class="tab active" data-tab="today">Calculate Hours</div>
       <div class="tab" data-tab="monthly">Monthly Tracker</div>
-      <div class="tab" data-tab="auth">Login</div>
     </div>
 
     <!-- Calculate Hours -->
@@ -87,39 +105,32 @@
       <h2>Monthly Tracker</h2>
       <label for="monthSelect">Select Month:</label>
       <select id="monthSelect"></select>
-
       <div id="monthlyResult">
         <p>Total Teaching Hours for <span id="monthName"></span>: <span id="monthlyTotal">0</span></p>
       </div>
-
       <div class="entry-list" id="monthlyEntryList"></div>
     </div>
+  </div>
 
-    <!-- Login -->
-    <div id="auth" class="tab-content">
-      <h2>User Login</h2>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button onclick="signup()">Sign Up</button>
-      <button onclick="login()">Login</button>
-      <button onclick="logout()">Logout</button>
-      <p id="authStatus"></p>
-    </div>
+  <!-- Auth Buttons -->
+  <div style="margin-top:20px; text-align:center;">
+    <button onclick="signup()">Sign Up</button>
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
   <div class="footer">
     <p>Created by <span>Fadil Rafeek CMA</span></p>
   </div>
 
-  <!-- Firebase + App Logic -->
+  <!-- Firebase & App Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } 
       from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } 
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs } 
       from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
       authDomain: "teaching-hours-ae6a1.firebaseapp.com",
@@ -134,7 +145,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ----- Tabs -----
+    // Tabs switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -144,142 +155,133 @@
       });
     });
 
-    // ----- Globals -----
-    let todayData = {};
-    let monthlyEntries = {}; // synced with Firestore
-
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const monthSelect = document.getElementById('monthSelect');
-    const months = [
-      "January","February","March","April","May","June",
-      "July","August","September","October","November","December"
-    ];
     months.forEach(m => {
       const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m;
-      monthSelect.appendChild(opt);
+      opt.value = m; opt.textContent = m; monthSelect.appendChild(opt);
     });
 
-    // ----- Calculator -----
-    window.calculateTotalHours = function () {
+    let todayData = {};
+    function calculateTotalHours() {
       const date = document.getElementById('date').value;
       const fromTime = document.getElementById('fromTime').value;
       const toTime = document.getElementById('toTime').value;
       const breakTime = parseInt(document.getElementById('breakTime').value);
-      if (!date || !fromTime || !toTime) return alert("Please fill in all fields.");
-
+      if (!date || !fromTime || !toTime) { alert("Please fill in all fields."); return; }
       const from = new Date(`1970-01-01T${fromTime}:00`);
       const to = new Date(`1970-01-01T${toTime}:00`);
       let totalMinutes = (to - from) / 60000 - breakTime;
-      if (totalMinutes < 0) return alert("Invalid time range.");
-
+      if (totalMinutes < 0) { alert("Invalid time range."); return; }
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
-
       document.getElementById('totalHours').textContent = `${hours} hours ${minutes} minutes`;
       document.getElementById('selectedDate').textContent = date;
-
       todayData = { date, minutes: totalMinutes };
-    };
+    }
+    window.calculateTotalHours = calculateTotalHours;
 
-    // ----- Save Record -----
-    window.addToMonthlyRecord = async function () {
-      if (!todayData.date) return alert("Please calculate today's hours first.");
+    async function addToMonthlyRecord() {
       const user = auth.currentUser;
-      if (!user) return alert("Please login first.");
+      if (!user) { alert("Please login first."); return; }
+      if (!todayData.date) { alert("Please calculate today's hours first."); return; }
 
       const dateObj = new Date(todayData.date);
       const month = months[dateObj.getMonth()];
-      const day = dateObj.getDate();
 
-      if (!monthlyEntries[month]) monthlyEntries[month] = [];
-      monthlyEntries[month] = monthlyEntries[month].filter(e => e.day !== day);
-      monthlyEntries[month].push({ day, minutes: todayData.minutes });
+      await addDoc(collection(db, "users", user.uid, "entries"), {
+        day: dateObj.getDate(),
+        month: month,
+        minutes: todayData.minutes,
+        date: todayData.date
+      });
+      alert("Saved to your account!");
 
-      await setDoc(doc(db, "users", user.uid), { monthlyEntries }, { merge: true });
-
-      updateMonthlyEntryList(month);
-      updateMonthlyTotal(month);
+      loadMonthlyData(month);
       monthSelect.value = month;
-    };
+    }
+    window.addToMonthlyRecord = addToMonthlyRecord;
 
-    function updateMonthlyEntryList(month) {
+    async function loadMonthlyData(month) {
+      const user = auth.currentUser;
+      if (!user) return;
+      const querySnap = await getDocs(collection(db, "users", user.uid, "entries"));
+      const entries = [];
+      querySnap.forEach(docSnap => entries.push(docSnap.data()));
+      const filtered = entries.filter(e => e.month === month);
+
       const entryList = document.getElementById('monthlyEntryList');
       entryList.innerHTML = '';
-      if (monthlyEntries[month]) {
-        monthlyEntries[month].sort((a, b) => a.day - b.day).forEach(entry => {
-          const hours = Math.floor(entry.minutes / 60);
-          const minutes = entry.minutes % 60;
-          const item = document.createElement('div');
-          item.classList.add('entry-item');
-          item.innerHTML = `
-            <span>Day ${entry.day}: ${hours}h ${minutes}m</span>
-            <button onclick="deleteEntry('${month}', ${entry.day})">Delete</button>
-          `;
-          entryList.appendChild(item);
-        });
-      }
-    }
-
-    window.deleteEntry = async function (month, day) {
-      monthlyEntries[month] = monthlyEntries[month].filter(e => e.day !== day);
-      const user = auth.currentUser;
-      if (user) await setDoc(doc(db, "users", user.uid), { monthlyEntries }, { merge: true });
-      updateMonthlyEntryList(month);
-      updateMonthlyTotal(month);
-    };
-
-    function updateMonthlyTotal(month) {
       let totalMinutes = 0;
-      if (monthlyEntries[month]) totalMinutes = monthlyEntries[month].reduce((s,e) => s + e.minutes, 0);
+      filtered.sort((a,b) => a.day - b.day).forEach(entry => {
+        totalMinutes += entry.minutes;
+        const hours = Math.floor(entry.minutes / 60);
+        const minutes = entry.minutes % 60;
+        const div = document.createElement('div');
+        div.classList.add('entry-item');
+        div.innerHTML = `<span>Day ${entry.day}: ${hours}h ${minutes}m</span>`;
+        entryList.appendChild(div);
+      });
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
       document.getElementById('monthlyTotal').textContent = `${hours} hours ${minutes} minutes`;
       document.getElementById('monthName').textContent = month;
     }
 
-    monthSelect.addEventListener('change', () => {
-      const month = monthSelect.value;
-      updateMonthlyEntryList(month);
-      updateMonthlyTotal(month);
+    monthSelect.addEventListener('change', function() {
+      loadMonthlyData(this.value);
     });
 
-    // ----- Auth -----
-    window.signup = async function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    // AUTH FUNCTIONS
+    window.signup = async function() {
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter a password:");
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } catch (err) { document.getElementById("authStatus").textContent = err.message; }
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCred.user.uid), { email, status: "pending" });
+        alert("Signup successful! Please wait for admin approval.");
+        await signOut(auth);
+      } catch (err) { alert("Signup failed: " + err.message); }
     };
 
-    window.login = async function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    window.login = async function() {
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter your password:");
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) { document.getElementById("authStatus").textContent = err.message; }
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (!userDoc.exists() || userDoc.data().status !== "approved") {
+          alert("⚠️ Your account is not approved yet.");
+          await signOut(auth);
+        } else {
+          alert("✅ Welcome " + email);
+          loadMonthlyData(months[new Date().getMonth()]);
+        }
+      } catch (err) { alert("Login failed: " + err.message); }
     };
 
-    window.logout = async function () {
+    window.logout = async function() {
       await signOut(auth);
+      alert("Logged out.");
+      document.getElementById('monthlyEntryList').innerHTML = '';
+      document.getElementById('monthlyTotal').textContent = '0';
     };
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        document.getElementById("authStatus").textContent = `Logged in as ${user.email}`;
-        const snap = await getDoc(doc(db, "users", user.uid));
-        monthlyEntries = snap.exists() ? snap.data().monthlyEntries || {} : {};
-        const currentMonth = months[new Date().getMonth()];
-        monthSelect.value = currentMonth;
-        updateMonthlyEntryList(currentMonth);
-        updateMonthlyTotal(currentMonth);
-      } else {
-        document.getElementById("authStatus").textContent = "Not logged in";
-        monthlyEntries = {};
-        document.getElementById("monthlyEntryList").innerHTML = "";
-        document.getElementById("monthlyTotal").textContent = "0";
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (!userDoc.exists() || userDoc.data().status !== "approved") {
+          await signOut(auth);
+        } else {
+          loadMonthlyData(months[new Date().getMonth()]);
+        }
       }
     });
+
+    // init with current month
+    const currentMonth = months[new Date().getMonth()];
+    monthSelect.value = currentMonth;
   </script>
 </body>
 </html>
