@@ -114,9 +114,10 @@
 
   <!-- Auth Buttons -->
   <div style="margin-top:20px; text-align:center;">
-    <button onclick="signup()">Sign Up</button>
-    <button onclick="login()">Login</button>
-    <button onclick="logout()">Logout</button>
+    <button id="signup-btn" onclick="signup()">Sign Up</button>
+    <button id="login-btn" onclick="login()">Login</button>
+    <button id="logout-btn" onclick="logout()" style="display:none;">Logout</button>
+    <p id="user-info" style="margin-top:10px; font-weight:bold;"></p>
   </div>
 
   <div class="footer">
@@ -137,7 +138,10 @@
     getFirestore, 
     doc, 
     setDoc, 
-    getDoc 
+    getDoc, 
+    addDoc, 
+    collection, 
+    getDocs 
   } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -208,6 +212,8 @@
   window.logout = async function() {
     await signOut(auth);
     alert("Logged out.");
+    document.getElementById('monthlyEntryList').innerHTML = '';
+    document.getElementById('monthlyTotal').textContent = '0';
   };
 
   // AUTH STATE LISTENER
@@ -230,147 +236,98 @@
       logoutBtn.style.display = "none";
       userInfo.innerText = "";
     }
+  });
+
+  // Tabs switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById(this.dataset.tab).classList.add('active');
+    });
+  });
+
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const monthSelect = document.getElementById('monthSelect');
+  months.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m; opt.textContent = m; monthSelect.appendChild(opt);
+  });
+
+  let todayData = {};
+  function calculateTotalHours() {
+    const date = document.getElementById('date').value;
+    const fromTime = document.getElementById('fromTime').value;
+    const toTime = document.getElementById('toTime').value;
+    const breakTime = parseInt(document.getElementById('breakTime').value);
+    if (!date || !fromTime || !toTime) { alert("Please fill in all fields."); return; }
+    const from = new Date(`1970-01-01T${fromTime}:00`);
+    const to = new Date(`1970-01-01T${toTime}:00`);
+    let totalMinutes = (to - from) / 60000 - breakTime;
+    if (totalMinutes < 0) { alert("Invalid time range."); return; }
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    document.getElementById('totalHours').textContent = `${hours} hours ${minutes} minutes`;
+    document.getElementById('selectedDate').textContent = date;
+    todayData = { date, minutes: totalMinutes };
+  }
+  window.calculateTotalHours = calculateTotalHours;
+
+  async function addToMonthlyRecord() {
+    const user = auth.currentUser;
+    if (!user) { alert("Please login first."); return; }
+    if (!todayData.date) { alert("Please calculate today's hours first."); return; }
+
+    const dateObj = new Date(todayData.date);
+    const month = months[dateObj.getMonth()];
+
+    await addDoc(collection(db, "users", user.uid, "entries"), {
+      day: dateObj.getDate(),
+      month: month,
+      minutes: todayData.minutes,
+      date: todayData.date
+    });
+    alert("Saved to your account!");
+
+    loadMonthlyData(month);
+    monthSelect.value = month;
+  }
+  window.addToMonthlyRecord = addToMonthlyRecord;
+
+  async function loadMonthlyData(month) {
+    const user = auth.currentUser;
+    if (!user) return;
+    const querySnap = await getDocs(collection(db, "users", user.uid, "entries"));
+    const entries = [];
+    querySnap.forEach(docSnap => entries.push(docSnap.data()));
+    const filtered = entries.filter(e => e.month === month);
+
+    const entryList = document.getElementById('monthlyEntryList');
+    entryList.innerHTML = '';
+    let totalMinutes = 0;
+    filtered.sort((a,b) => a.day - b.day).forEach(entry => {
+      totalMinutes += entry.minutes;
+      const hours = Math.floor(entry.minutes / 60);
+      const minutes = entry.minutes % 60;
+      const div = document.createElement('div');
+      div.classList.add('entry-item');
+      div.innerHTML = `<span>Day ${entry.day}: ${hours}h ${minutes}m</span>`;
+      entryList.appendChild(div);
+    });
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    document.getElementById('monthlyTotal').textContent = `${hours} hours ${minutes} minutes`;
+    document.getElementById('monthName').textContent = month;
   }
 
+  monthSelect.addEventListener('change', function() {
+    loadMonthlyData(this.value);
+  });
 
-    // Tabs switching
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', function () {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById(this.dataset.tab).classList.add('active');
-      });
-    });
-
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const monthSelect = document.getElementById('monthSelect');
-    months.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m; monthSelect.appendChild(opt);
-    });
-
-    let todayData = {};
-    function calculateTotalHours() {
-      const date = document.getElementById('date').value;
-      const fromTime = document.getElementById('fromTime').value;
-      const toTime = document.getElementById('toTime').value;
-      const breakTime = parseInt(document.getElementById('breakTime').value);
-      if (!date || !fromTime || !toTime) { alert("Please fill in all fields."); return; }
-      const from = new Date(`1970-01-01T${fromTime}:00`);
-      const to = new Date(`1970-01-01T${toTime}:00`);
-      let totalMinutes = (to - from) / 60000 - breakTime;
-      if (totalMinutes < 0) { alert("Invalid time range."); return; }
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      document.getElementById('totalHours').textContent = `${hours} hours ${minutes} minutes`;
-      document.getElementById('selectedDate').textContent = date;
-      todayData = { date, minutes: totalMinutes };
-    }
-    window.calculateTotalHours = calculateTotalHours;
-
-    async function addToMonthlyRecord() {
-      const user = auth.currentUser;
-      if (!user) { alert("Please login first."); return; }
-      if (!todayData.date) { alert("Please calculate today's hours first."); return; }
-
-      const dateObj = new Date(todayData.date);
-      const month = months[dateObj.getMonth()];
-
-      await addDoc(collection(db, "users", user.uid, "entries"), {
-        day: dateObj.getDate(),
-        month: month,
-        minutes: todayData.minutes,
-        date: todayData.date
-      });
-      alert("Saved to your account!");
-
-      loadMonthlyData(month);
-      monthSelect.value = month;
-    }
-    window.addToMonthlyRecord = addToMonthlyRecord;
-
-    async function loadMonthlyData(month) {
-      const user = auth.currentUser;
-      if (!user) return;
-      const querySnap = await getDocs(collection(db, "users", user.uid, "entries"));
-      const entries = [];
-      querySnap.forEach(docSnap => entries.push(docSnap.data()));
-      const filtered = entries.filter(e => e.month === month);
-
-      const entryList = document.getElementById('monthlyEntryList');
-      entryList.innerHTML = '';
-      let totalMinutes = 0;
-      filtered.sort((a,b) => a.day - b.day).forEach(entry => {
-        totalMinutes += entry.minutes;
-        const hours = Math.floor(entry.minutes / 60);
-        const minutes = entry.minutes % 60;
-        const div = document.createElement('div');
-        div.classList.add('entry-item');
-        div.innerHTML = `<span>Day ${entry.day}: ${hours}h ${minutes}m</span>`;
-        entryList.appendChild(div);
-      });
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      document.getElementById('monthlyTotal').textContent = `${hours} hours ${minutes} minutes`;
-      document.getElementById('monthName').textContent = month;
-    }
-
-    monthSelect.addEventListener('change', function() {
-      loadMonthlyData(this.value);
-    });
-
-    // AUTH FUNCTIONS
-    window.signup = async function() {
-      const email = prompt("Enter your email:");
-      const password = prompt("Enter a password:");
-      try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", userCred.user.uid), { email, status: "pending" });
-        alert("Signup successful! Please wait for admin approval.");
-        await signOut(auth);
-      } catch (err) { alert("Signup failed: " + err.message); }
-    };
-
-    window.login = async function() {
-      const email = prompt("Enter your email:");
-      const password = prompt("Enter your password:");
-      try {
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCred.user.uid;
-        const userDoc = await getDoc(doc(db, "users", uid));
-        if (!userDoc.exists() || userDoc.data().status !== "approved") {
-          alert("⚠️ Your account is not approved yet.");
-          await signOut(auth);
-        } else {
-          alert("✅ Welcome " + email);
-          loadMonthlyData(months[new Date().getMonth()]);
-        }
-      } catch (err) { alert("Login failed: " + err.message); }
-    };
-
-    window.logout = async function() {
-      await signOut(auth);
-      alert("Logged out.");
-      document.getElementById('monthlyEntryList').innerHTML = '';
-      document.getElementById('monthlyTotal').textContent = '0';
-    };
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (!userDoc.exists() || userDoc.data().status !== "approved") {
-          await signOut(auth);
-        } else {
-          loadMonthlyData(months[new Date().getMonth()]);
-        }
-      }
-    });
-
-    // init with current month
-    const currentMonth = months[new Date().getMonth()];
-    monthSelect.value = currentMonth;
+  // init with current month
+  const currentMonth = months[new Date().getMonth()];
+  monthSelect.value = currentMonth;
   </script>
 </body>
 </html>
-
