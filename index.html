@@ -280,10 +280,16 @@
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
       const userDoc = await getDoc(doc(db, "users", uid));
-      if (!userDoc.exists() || userDoc.data().status !== "approved") {
-        alert("⚠️ Your account is not approved yet.");
-        await signOut(auth);
-      } else {
+     if (
+  userDoc.exists() &&
+  (userDoc.data().status === "approved" || user.email === ADMIN_EMAIL)
+) {
+  // allow login (admin or approved user)
+} else {
+  alert("Your account has not been approved yet.");
+  await auth.signOut();
+}
+ else {
         alert("✅ Welcome " + email);
         loadMonthlyData(months[new Date().getMonth()]);
       }
@@ -360,4 +366,5 @@
   </script>
 </body>
 </html>
+
 
