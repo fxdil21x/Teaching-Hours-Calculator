@@ -48,16 +48,12 @@
     }
     .entry-item button {
       background-color: #e74c3c; padding: 6px 10px; font-size: 0.9rem;
-      border-radius: 6px; border: none;
+      border-radius: 6px; border: none; color: white;
     }
     .entry-item button:hover { background-color: #c0392b; }
     .footer { font-size: 1rem; margin-top: 30px; color: #f0f0f0; text-align: center; }
     .footer span { font-weight: bold; color: #FFD700; }
-    #user-info { margin-top: 10px; font-size: 1rem; color: #FFD700; }
-    @media (max-width: 768px) {
-      .tab { flex: 1; text-align: center; }
-      input, select, button { width: 95%; }
-    }
+    #auth-section { margin-top:20px; text-align:center; }
   </style>
 </head>
 <body>
@@ -68,7 +64,7 @@
     <div class="tabs">
       <div class="tab active" data-tab="today">Calculate Hours</div>
       <div class="tab" data-tab="monthly">Monthly Tracker</div>
-      <div class="tab" data-tab="admin" style="display:none;">Admin Panel</div>
+      <div class="tab" id="adminTab" data-tab="admin" style="display:none;">Admin Panel</div>
     </div>
 
     <!-- Calculate Hours -->
@@ -115,16 +111,16 @@
     <!-- Admin Panel -->
     <div id="admin" class="tab-content">
       <h2>Admin Panel</h2>
-      <div id="pendingUsersList"></div>
+      <div id="userRequests"></div>
     </div>
   </div>
 
-  <!-- Auth Buttons -->
-  <div style="margin-top:20px; text-align:center;">
-    <button id="signup-btn" onclick="signup()">Sign Up</button>
-    <button id="login-btn" onclick="login()">Login</button>
-    <button id="logout-btn" onclick="logout()" style="display:none;">Logout</button>
-    <p id="user-info"></p>
+  <!-- Auth Section -->
+  <div id="auth-section">
+    <span id="userEmail"></span><br>
+    <button id="signupBtn" onclick="signup()">Sign Up</button>
+    <button id="loginBtn" onclick="login()">Login</button>
+    <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
   </div>
 
   <div class="footer">
@@ -133,238 +129,199 @@
 
   <!-- Firebase & App Script -->
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { 
-    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-    signOut, onAuthStateChanged 
-  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-  import { 
-    getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, updateDoc 
-  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } 
+      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, deleteDoc } 
+      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
-    authDomain: "teaching-hours-ae6a1.firebaseapp.com",
-    projectId: "teaching-hours-ae6a1",
-    storageBucket: "teaching-hours-ae6a1.appspot.com",
-    messagingSenderId: "239533580131",
-    appId: "1:239533580131:web:19841566c3d777a7eafd56",
-    measurementId: "G-RWJE4GHJ4Y"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
+      authDomain: "teaching-hours-ae6a1.firebaseapp.com",
+      projectId: "teaching-hours-ae6a1",
+      storageBucket: "teaching-hours-ae6a1.firebasestorage.app",
+      messagingSenderId: "239533580131",
+      appId: "1:239533580131:web:19841566c3d777a7eafd56",
+      measurementId: "G-RWJE4GHJ4Y"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    const ADMIN_EMAIL = "fadilfadu90@gmail.com"; // 🔑 change to your real admin email
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  const signupBtn = document.getElementById("signup-btn");
-  const loginBtn = document.getElementById("login-btn");
-  const logoutBtn = document.getElementById("logout-btn");
-  const userInfo = document.getElementById("user-info");
-
-  const ADMIN_EMAIL = "fadilfadu90@gmail.com"; // <-- replace with your email
-
-  let todayData = {};
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const monthSelect = document.getElementById('monthSelect');
-  months.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m; opt.textContent = m; monthSelect.appendChild(opt);
-  });
-  monthSelect.value = months[new Date().getMonth()];
-
-  // Tabs switching
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', function () {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById(this.dataset.tab).classList.add('active');
+    // Tabs switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
     });
-  });
 
-  // Calculate Hours
-  window.calculateTotalHours = function() {
-    const date = document.getElementById('date').value;
-    const fromTime = document.getElementById('fromTime').value;
-    const toTime = document.getElementById('toTime').value;
-    const breakTime = parseInt(document.getElementById('breakTime').value);
-    if (!date || !fromTime || !toTime) { alert("Please fill in all fields."); return; }
-    const from = new Date(`1970-01-01T${fromTime}:00`);
-    const to = new Date(`1970-01-01T${toTime}:00`);
-    let totalMinutes = (to - from) / 60000 - breakTime;
-    if (totalMinutes < 0) { alert("Invalid time range."); return; }
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    document.getElementById('totalHours').textContent = `${hours} hours ${minutes} minutes`;
-    document.getElementById('selectedDate').textContent = date;
-    todayData = { date, minutes: totalMinutes };
-  };
-
-  // Add entry
-  window.addToMonthlyRecord = async function() {
-    const user = auth.currentUser;
-    if (!user) { alert("Please login first."); return; }
-    if (!todayData.date) { alert("Please calculate today's hours first."); return; }
-
-    const dateObj = new Date(todayData.date);
-    const month = months[dateObj.getMonth()];
-
-    await addDoc(collection(db, "users", user.uid, "entries"), {
-      day: dateObj.getDate(),
-      month: month,
-      minutes: todayData.minutes,
-      date: todayData.date
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const monthSelect = document.getElementById('monthSelect');
+    months.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m; opt.textContent = m; monthSelect.appendChild(opt);
     });
-    alert("Saved to your account!");
-    loadMonthlyData(month);
-    monthSelect.value = month;
-  };
 
-  // Load monthly entries
-  async function loadMonthlyData(month) {
-    const user = auth.currentUser;
-    if (!user) return;
-    const querySnap = await getDocs(collection(db, "users", user.uid, "entries"));
-    const entries = [];
-    querySnap.forEach(docSnap => entries.push({ id: docSnap.id, ...docSnap.data() }));
-    const filtered = entries.filter(e => e.month === month);
+    let todayData = {};
+    function calculateTotalHours() {
+      const date = document.getElementById('date').value;
+      const fromTime = document.getElementById('fromTime').value;
+      const toTime = document.getElementById('toTime').value;
+      const breakTime = parseInt(document.getElementById('breakTime').value);
+      if (!date || !fromTime || !toTime) { alert("Please fill in all fields."); return; }
+      const from = new Date(`1970-01-01T${fromTime}:00`);
+      const to = new Date(`1970-01-01T${toTime}:00`);
+      let totalMinutes = (to - from) / 60000 - breakTime;
+      if (totalMinutes < 0) { alert("Invalid time range."); return; }
+      const decimalHours = (totalMinutes / 60).toFixed(2);
+      document.getElementById('totalHours').textContent = `${decimalHours} hours`;
+      document.getElementById('selectedDate').textContent = date;
+      todayData = { date, minutes: totalMinutes };
+    }
+    window.calculateTotalHours = calculateTotalHours;
 
-    const entryList = document.getElementById('monthlyEntryList');
-    entryList.innerHTML = '';
-    let totalMinutes = 0;
-    filtered.sort((a,b) => a.day - b.day).forEach(entry => {
-      totalMinutes += entry.minutes;
-      const hours = Math.floor(entry.minutes / 60);
-      const minutes = entry.minutes % 60;
-      const div = document.createElement('div');
-      div.classList.add('entry-item');
-      div.innerHTML = `<span>Day ${entry.day}: ${hours}h ${minutes}m</span>
-                       <button onclick="deleteEntry('${entry.id}')">Delete</button>`;
-      entryList.appendChild(div);
+    async function addToMonthlyRecord() {
+      const user = auth.currentUser;
+      if (!user) { alert("Please login first."); return; }
+      if (!todayData.date) { alert("Please calculate today's hours first."); return; }
+
+      const dateObj = new Date(todayData.date);
+      const month = months[dateObj.getMonth()];
+
+      await addDoc(collection(db, "users", user.uid, "entries"), {
+        day: dateObj.getDate(),
+        month: month,
+        minutes: todayData.minutes,
+        date: todayData.date
+      });
+      alert("Saved to your account!");
+
+      loadMonthlyData(month);
+      monthSelect.value = month;
+    }
+    window.addToMonthlyRecord = addToMonthlyRecord;
+
+    async function loadMonthlyData(month) {
+      const user = auth.currentUser;
+      if (!user) return;
+      const querySnap = await getDocs(collection(db, "users", user.uid, "entries"));
+      const entries = [];
+      querySnap.forEach(docSnap => entries.push({ id: docSnap.id, ...docSnap.data() }));
+      const filtered = entries.filter(e => e.month === month);
+
+      const entryList = document.getElementById('monthlyEntryList');
+      entryList.innerHTML = '';
+      let totalMinutes = 0;
+      filtered.sort((a,b) => a.day - b.day).forEach(entry => {
+        totalMinutes += entry.minutes;
+        const decimalHours = (entry.minutes / 60).toFixed(2);
+        const div = document.createElement('div');
+        div.classList.add('entry-item');
+        div.innerHTML = `<span>Day ${entry.day}: ${decimalHours}h</span>
+                         <button onclick="deleteEntry('${entry.id}')">❌</button>`;
+        entryList.appendChild(div);
+      });
+      const monthlyHours = (totalMinutes / 60).toFixed(2);
+      document.getElementById('monthlyTotal').textContent = `${monthlyHours} hours`;
+      document.getElementById('monthName').textContent = month;
+    }
+    window.loadMonthlyData = loadMonthlyData;
+
+    window.deleteEntry = async function(id) {
+      const user = auth.currentUser;
+      if (!user) return;
+      await deleteDoc(doc(db, "users", user.uid, "entries", id));
+      loadMonthlyData(monthSelect.value);
+    };
+
+    monthSelect.addEventListener('change', function() {
+      loadMonthlyData(this.value);
     });
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    document.getElementById('monthlyTotal').textContent = `${hours} hours ${minutes} minutes`;
-    document.getElementById('monthName').textContent = month;
-  }
 
-  // Delete entry
-  window.deleteEntry = async function(entryId) {
-    const user = auth.currentUser;
-    if (!user) return;
-    await deleteDoc(doc(db, "users", user.uid, "entries", entryId));
-    alert("Entry deleted.");
-    loadMonthlyData(monthSelect.value);
-  };
+    // AUTH FUNCTIONS
+    window.signup = async function() {
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter a password:");
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCred.user.uid), { email, status: "pending" });
+        alert("Signup successful! Please wait for admin approval.");
+        await signOut(auth);
+      } catch (err) { alert("Signup failed: " + err.message); }
+    };
 
-  monthSelect.addEventListener('change', function() {
-    loadMonthlyData(this.value);
-  });
+    window.login = async function() {
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter your password:");
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
+        const userDoc = await getDoc(doc(db, "users", uid));
 
-  // Auth
-  window.signup = async function() {
-    const email = prompt("Enter your email:");
-    const password = prompt("Enter a password:");
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", userCred.user.uid), { email, status: "pending" });
-      alert("Signup successful! Please wait for admin approval.");
+        if (email === ADMIN_EMAIL || (userDoc.exists() && userDoc.data().status === "approved")) {
+          alert("✅ Welcome " + email);
+          document.getElementById("userEmail").textContent = "Logged in as: " + email;
+          document.getElementById("loginBtn").style.display = "none";
+          document.getElementById("signupBtn").style.display = "none";
+          document.getElementById("logoutBtn").style.display = "inline-block";
+
+          if (email === ADMIN_EMAIL) {
+            document.getElementById("adminTab").style.display = "block";
+            loadUserRequests();
+          }
+          loadMonthlyData(months[new Date().getMonth()]);
+        } else {
+          alert("⚠️ Your account is not approved yet.");
+          await signOut(auth);
+        }
+      } catch (err) { alert("Login failed: " + err.message); }
+    };
+
+    window.logout = async function() {
       await signOut(auth);
-    } catch (err) { alert("Signup failed: " + err.message); }
-  };
+      alert("Logged out.");
+      document.getElementById("userEmail").textContent = "";
+      document.getElementById("loginBtn").style.display = "inline-block";
+      document.getElementById("signupBtn").style.display = "inline-block";
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("adminTab").style.display = "none";
+      document.getElementById('monthlyEntryList').innerHTML = '';
+      document.getElementById('monthlyTotal').textContent = '0';
+    };
 
-  window.login = async function() {
-    const email = prompt("Enter your email:");
-    const password = prompt("Enter your password:");
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
-      const userDoc = await getDoc(doc(db, "users", uid));
-     if (
-  userDoc.exists() &&
-  (userDoc.data().status === "approved" || user.email === ADMIN_EMAIL)
-) {
-  // allow login (admin or approved user)
-} else {
-  alert("Your account has not been approved yet.");
-  await auth.signOut();
-}
- else {
-        alert("✅ Welcome " + email);
-        loadMonthlyData(months[new Date().getMonth()]);
-      }
-    } catch (err) { alert("Login failed: " + err.message); }
-  };
-
-  window.logout = async function() {
-    await signOut(auth);
-    alert("Logged out.");
-    document.getElementById('monthlyEntryList').innerHTML = '';
-    document.getElementById('monthlyTotal').textContent = '0';
-  };
-
-  // Admin functions
-  async function loadPendingUsers() {
-    const user = auth.currentUser;
-    if (!user || user.email !== ADMIN_EMAIL) return;
-
-    const usersCol = collection(db, "users");
-    const snap = await getDocs(usersCol);
-
-    const listDiv = document.getElementById("pendingUsersList");
-    listDiv.innerHTML = "";
-
-    snap.forEach(docSnap => {
-      const data = docSnap.data();
-      if (data.status === "pending") {
+    async function loadUserRequests() {
+      const querySnap = await getDocs(collection(db, "users"));
+      const userRequestsDiv = document.getElementById("userRequests");
+      userRequestsDiv.innerHTML = "";
+      querySnap.forEach(docSnap => {
+        const u = docSnap.data();
         const div = document.createElement("div");
         div.classList.add("entry-item");
-        div.innerHTML = `<span>${data.email} (status: ${data.status})</span>
-                         <button onclick="approveUser('${docSnap.id}')">Approve</button>`;
-        listDiv.appendChild(div);
-      }
-    });
-  }
+        div.innerHTML = `${u.email} - Status: ${u.status} 
+          <button onclick="approveUser('${docSnap.id}')">Approve</button>
+          <button onclick="rejectUser('${docSnap.id}')">Reject</button>`;
+        userRequestsDiv.appendChild(div);
+      });
+    }
 
-  window.approveUser = async function(uid) {
-    try {
+    window.approveUser = async function(uid) {
       await updateDoc(doc(db, "users", uid), { status: "approved" });
-      alert("User approved ✅");
-      loadPendingUsers();
-    } catch (err) {
-      alert("Error approving user: " + err.message);
-    }
-  };
+      loadUserRequests();
+    };
 
-  // Auth state listener
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (!userDoc.exists() || userDoc.data().status !== "approved") {
-        await signOut(auth);
-        return;
-      }
-      signupBtn.style.display = "none";
-      loginBtn.style.display = "none";
-      logoutBtn.style.display = "inline-block";
-      userInfo.innerText = `Logged in as: ${user.email}`;
+    window.rejectUser = async function(uid) {
+      await updateDoc(doc(db, "users", uid), { status: "rejected" });
+      loadUserRequests();
+    };
 
-      loadMonthlyData(months[new Date().getMonth()]);
-
-      if (user.email === ADMIN_EMAIL) {
-        document.querySelector('[data-tab="admin"]').style.display = "inline-block";
-        loadPendingUsers();
-      }
-    } else {
-      signupBtn.style.display = "inline-block";
-      loginBtn.style.display = "inline-block";
-      logoutBtn.style.display = "none";
-      userInfo.innerText = "";
-      document.querySelector('[data-tab="admin"]').style.display = "none";
-    }
-  });
+    // init with current month
+    const currentMonth = months[new Date().getMonth()];
+    monthSelect.value = currentMonth;
   </script>
 </body>
 </html>
-
-
