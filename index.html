@@ -1,139 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teaching Hours Calculator</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Teaching Hours & Salary Tracker</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(45deg, #6a11cb, #2575fc);
-      color: white; display: flex; flex-direction: column;
-      align-items: center; min-height: 100vh; padding: 20px;
-    }
-    .container {
-      background: rgba(0, 0, 0, 0.85); padding: 30px; border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3); width: 100%; max-width: 900px;
-      text-align: center;
-    }
-    h1 { font-size: 2.4rem; margin-bottom: 15px; font-weight: bold; color: #FFD700; }
-    h2 { font-size: 1.6rem; margin-bottom: 15px; color: #f0f0f0; }
-    .tabs { display: flex; justify-content: center; margin-bottom: 20px;
-      border-bottom: 2px solid #fff; gap: 10px; flex-wrap: wrap; }
-    .tab {
-      background-color: #6a11cb; color: #fff; padding: 12px 24px; cursor: pointer;
-      border-radius: 8px 8px 0 0; font-size: 1.1rem; transition: background-color 0.3s;
-    }
-    .tab:hover, .tab.active { background-color: #2575fc; }
-    .tab-content { display: none; margin-top: 20px; }
-    .tab-content.active { display: block; }
-    input, select, button {
-      width: 80%; padding: 12px; margin: 10px 0; font-size: 1rem;
-      border-radius: 8px; border: none; background-color: #f0f0f0; color: #333;
-    }
-    button {
-      background-color: #2575fc; color: white; font-size: 1.1rem;
-      cursor: pointer; transition: all 0.3s ease;
-    }
-    button:hover { background-color: #6a11cb; transform: scale(1.05); }
-    .result {
-      margin-top: 20px; font-size: 1.2rem; background: rgba(0,0,0,0.5);
-      padding: 12px; border-radius: 12px; color: #FFD700;
-    }
-    .entry-list { margin-top: 20px; max-height: 300px; overflow-y: auto; text-align: left; }
-    .entry-item {
-      background: rgba(0,0,0,0.4); padding: 12px; margin-bottom: 10px;
-      border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
-    }
-    .entry-item button {
-      background-color: #e74c3c; padding: 6px 10px; font-size: 0.9rem;
-      border-radius: 6px; border: none; color: white;
-    }
-    .entry-item button:hover { background-color: #c0392b; }
-    .footer { font-size: 1rem; margin-top: 30px; color: #f0f0f0; text-align: center; }
-    .footer span { font-weight: bold; color: #FFD700; }
-    #auth-section { margin-top:20px; text-align:center; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:linear-gradient(45deg,#6a11cb,#2575fc);color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+    .container{width:100%;max-width:980px;background:rgba(0,0,0,.85);padding:24px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.3)}
+    h1{color:#FFD700;margin-bottom:12px}
+    .tabs{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+    .tab{background:#6a11cb;padding:10px 16px;border-radius:8px 8px 0 0;cursor:pointer;color:#fff}
+    .tab.active{background:#2575fc}
+    .tab-content{display:none}.tab-content.active{display:block}
+    input,select,button{width:80%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#f0f0f0;color:#222;font-size:1rem}
+    label{display:block;margin-top:6px;text-align:left;width:80%;margin-left:10%}
+    .result{margin-top:12px;background:rgba(0,0,0,.45);padding:12px;border-radius:10px;color:#FFD700}
+    .entry-list{margin-top:14px;max-height:320px;overflow:auto;text-align:left;padding:0 6%}
+    .entry-item{background:rgba(0,0,0,.4);padding:10px;margin-bottom:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+    .entry-item button{background:#e74c3c;border:none;padding:6px 8px;border-radius:6px;color:#fff;cursor:pointer}
+    .entry-item button:hover{background:#c0392b}
+    .footer{text-align:center;margin-top:20px;color:#f0f0f0}
+    .small{font-size:.9rem;color:#ddd;margin-top:6px}
+    .total-box{background:rgba(255,255,255,.06);padding:10px;border-radius:8px;margin-top:10px;color:#FFD700;font-weight:700}
+    .admin-actions button{margin-left:6px}
+    @media(max-width:720px){input,select,button,label{width:95%;margin-left:0}.entry-list{padding:0 4%}}
   </style>
 </head>
 <body>
-
   <div class="container">
-    <h1>Teaching Hours Calculator</h1>
-
+    <h1>Teaching Hours & Salary Tracker</h1>
     <div class="tabs">
       <div class="tab active" data-tab="today">Calculate Hours</div>
       <div class="tab" data-tab="monthly">Monthly Tracker</div>
+      <div class="tab" data-tab="salary">Salary Report</div>
       <div class="tab" id="adminTab" data-tab="admin" style="display:none;">Admin Panel</div>
     </div>
 
     <!-- Calculate Hours -->
     <div id="today" class="tab-content active">
-      <h2>Calculate Total Hours</h2>
-      <form id="todayForm">
-        <div>
-          <label for="date">Select Date:</label><br>
-          <input type="date" id="date" required>
-        </div>
-        <div>
-          <label for="fromTime">From Time:</label><br>
-          <input type="time" id="fromTime" required>
-        </div>
-        <div>
-          <label for="toTime">To Time:</label><br>
-          <input type="time" id="toTime" required>
-        </div>
-        <div>
-          <label for="breakTime">Break Time (minutes):</label><br>
-          <input type="number" id="breakTime" min="0" required>
-        </div>
-        <button type="button" onclick="calculateTotalHours()">Calculate</button>
-      </form>
-
-      <div id="result" class="result">
-        <p>Total Teaching Hours: <span id="totalHours">0</span></p>
-        <p>Date: <span id="selectedDate"></span></p>
-        <button type="button" onclick="addToMonthlyRecord()">Add to Monthly Record</button>
+      <h2 class="small">Add Teaching Entry</h2>
+      <label>Date</label><input id="date" type="date">
+      <label>From Time</label><input id="fromTime" type="time">
+      <label>To Time</label><input id="toTime" type="time">
+      <label>Break Time (minutes)</label><input id="breakTime" type="number" min="0" value="0">
+      <label>Institute</label>
+      <select id="instituteSelect"></select>
+      <div id="newInstituteFields" style="display:none;">
+        <label>Institute Name</label><input id="newInstituteName" type="text">
+        <label>Hourly Rate (₹)</label><input id="newInstituteRate" type="number" min="0">
+        <label><input id="newInstituteTds" type="checkbox"> TDS (10%)</label>
+        <button onclick="saveNewInstitute()">Save Institute</button>
       </div>
+      <button onclick="calculateTotalHours()">Calculate</button>
+      <div id="result" class="result">
+        <p>Total Hours: <span id="totalHours">0.00</span></p>
+        <p>Total Salary: ₹<span id="calculatedSalary">0.00</span></p>
+        <p>Date: <span id="selectedDate">-</span></p>
+        <button onclick="addToMonthlyRecord()">Save Entry</button>
+      </div>
+
+      <h3 class="small" style="margin-top:16px">Manage Institutes</h3>
+      <div id="instituteList" class="entry-list"></div>
     </div>
 
     <!-- Monthly Tracker -->
     <div id="monthly" class="tab-content">
-      <h2>Monthly Tracker</h2>
-      <label for="monthSelect">Select Month:</label>
+      <h2 class="small">Monthly Tracker</h2>
+      <label>Select Month</label>
       <select id="monthSelect"></select>
-      <div id="monthlyResult">
-        <p>Total Teaching Hours for <span id="monthName"></span>: <span id="monthlyTotal">0</span></p>
-      </div>
-      <div class="entry-list" id="monthlyEntryList"></div>
+      <div id="monthlyResult" class="small">Total Hours: <span id="monthlyTotal">0</span></div>
+      <div id="monthlyEntryList" class="entry-list"></div>
     </div>
 
-    <!-- Admin Panel -->
+    <!-- Salary Report -->
+    <div id="salary" class="tab-content">
+      <h2 class="small">Salary Report</h2>
+      <label>Select Month</label><select id="salaryMonth"></select>
+      <button onclick="loadSalaryReport()">Show</button>
+      <button onclick="downloadCSV()">Download CSV</button>
+      <div id="salaryReport" class="entry-list"></div>
+    </div>
+
+    <!-- Admin -->
     <div id="admin" class="tab-content">
       <h2>Admin Panel</h2>
-      <div id="userRequests"></div>
+      <div id="userRequests" class="entry-list"></div>
     </div>
   </div>
 
-  <!-- Auth Section -->
-  <div id="auth-section">
-    <span id="userEmail"></span><br>
+  <!-- Auth -->
+  <div id="auth-section" style="margin-top:14px;text-align:center">
+    <div class="small" id="userEmailDisplay"></div>
     <button id="signupBtn" onclick="signup()">Sign Up</button>
     <button id="loginBtn" onclick="login()">Login</button>
     <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
   </div>
+  <div class="footer"><p class="small">Created by <span>Fadil Rafeek CMA</span></p></div>
 
-  <div class="footer">
-    <p>Created by <span>Fadil Rafeek CMA</span></p>
-  </div>
-
-  <!-- Firebase & App Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } 
-      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, deleteDoc } 
-      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
@@ -144,184 +112,147 @@
       appId: "1:239533580131:web:19841566c3d777a7eafd56",
       measurementId: "G-RWJE4GHJ4Y"
     };
-
-    const ADMIN_EMAIL = "fadilfadu90@gmail.com"; // 🔑 change to your real admin email
+    const ADMIN_EMAIL = "Fadilrafeek29@gmail.com";
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Tabs switching
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', function () {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById(this.dataset.tab).classList.add('active');
+    const instituteSelect=document.getElementById("instituteSelect");
+    const newInstituteFields=document.getElementById("newInstituteFields");
+    const instituteList=document.getElementById("instituteList");
+
+    let todayData={}; let institutes=[];
+
+    // Tabs
+    document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",function(){
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+      this.classList.add("active");document.getElementById(this.dataset.tab).classList.add("active");
+      if(this.dataset.tab==="monthly") loadMonthlyData(parseInt(monthSelect.value));
+      if(this.dataset.tab==="salary") loadSalaryReport();
+      if(this.dataset.tab==="admin") loadUserRequests();
+    }));
+
+    // Months
+    const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const monthSelect=document.getElementById("monthSelect");
+    const salaryMonth=document.getElementById("salaryMonth");
+    months.forEach((m,i)=>{let o1=document.createElement("option");o1.value=i;o1.textContent=m;monthSelect.appendChild(o1);
+      let o2=document.createElement("option");o2.value=i;o2.textContent=m;salaryMonth.appendChild(o2)});
+    monthSelect.value=new Date().getMonth();salaryMonth.value=new Date().getMonth();
+
+    // Load institutes
+    async function loadInstitutes(){
+      const user=auth.currentUser;if(!user)return;
+      const snap=await getDocs(collection(db,"users",user.uid,"institutes"));
+      institutes=[];instituteSelect.innerHTML="";
+      snap.forEach(ds=>{institutes.push({id:ds.id,...ds.data()})});
+      institutes.forEach(inst=>{
+        let opt=document.createElement("option");
+        opt.value=inst.id;opt.textContent=inst.name;instituteSelect.appendChild(opt);
       });
-    });
-
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const monthSelect = document.getElementById('monthSelect');
-    months.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m; monthSelect.appendChild(opt);
-    });
-
-    let todayData = {};
-    function calculateTotalHours() {
-      const date = document.getElementById('date').value;
-      const fromTime = document.getElementById('fromTime').value;
-      const toTime = document.getElementById('toTime').value;
-      const breakTime = parseInt(document.getElementById('breakTime').value);
-      if (!date || !fromTime || !toTime) { alert("Please fill in all fields."); return; }
-      const from = new Date(`1970-01-01T${fromTime}:00`);
-      const to = new Date(`1970-01-01T${toTime}:00`);
-      let totalMinutes = (to - from) / 60000 - breakTime;
-      if (totalMinutes < 0) { alert("Invalid time range."); return; }
-      const decimalHours = (totalMinutes / 60).toFixed(2);
-      document.getElementById('totalHours').textContent = `${decimalHours} hours`;
-      document.getElementById('selectedDate').textContent = date;
-      todayData = { date, minutes: totalMinutes };
+      let optNew=document.createElement("option");optNew.value="new";optNew.textContent="➕ Add New Institute";instituteSelect.appendChild(optNew);
+      renderInstituteList();
     }
-    window.calculateTotalHours = calculateTotalHours;
-
-    async function addToMonthlyRecord() {
-      const user = auth.currentUser;
-      if (!user) { alert("Please login first."); return; }
-      if (!todayData.date) { alert("Please calculate today's hours first."); return; }
-
-      const dateObj = new Date(todayData.date);
-      const month = months[dateObj.getMonth()];
-
-      await addDoc(collection(db, "users", user.uid, "entries"), {
-        day: dateObj.getDate(),
-        month: month,
-        minutes: todayData.minutes,
-        date: todayData.date
-      });
-      alert("Saved to your account!");
-
-      loadMonthlyData(month);
-      monthSelect.value = month;
-    }
-    window.addToMonthlyRecord = addToMonthlyRecord;
-
-    async function loadMonthlyData(month) {
-      const user = auth.currentUser;
-      if (!user) return;
-      const querySnap = await getDocs(collection(db, "users", user.uid, "entries"));
-      const entries = [];
-      querySnap.forEach(docSnap => entries.push({ id: docSnap.id, ...docSnap.data() }));
-      const filtered = entries.filter(e => e.month === month);
-
-      const entryList = document.getElementById('monthlyEntryList');
-      entryList.innerHTML = '';
-      let totalMinutes = 0;
-      filtered.sort((a,b) => a.day - b.day).forEach(entry => {
-        totalMinutes += entry.minutes;
-        const decimalHours = (entry.minutes / 60).toFixed(2);
-        const div = document.createElement('div');
-        div.classList.add('entry-item');
-        div.innerHTML = `<span>Day ${entry.day}: ${decimalHours}h</span>
-                         <button onclick="deleteEntry('${entry.id}')">❌</button>`;
-        entryList.appendChild(div);
-      });
-      const monthlyHours = (totalMinutes / 60).toFixed(2);
-      document.getElementById('monthlyTotal').textContent = `${monthlyHours} hours`;
-      document.getElementById('monthName').textContent = month;
-    }
-    window.loadMonthlyData = loadMonthlyData;
-
-    window.deleteEntry = async function(id) {
-      const user = auth.currentUser;
-      if (!user) return;
-      await deleteDoc(doc(db, "users", user.uid, "entries", id));
-      loadMonthlyData(monthSelect.value);
-    };
-
-    monthSelect.addEventListener('change', function() {
-      loadMonthlyData(this.value);
-    });
-
-    // AUTH FUNCTIONS
-    window.signup = async function() {
-      const email = prompt("Enter your email:");
-      const password = prompt("Enter a password:");
-      try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", userCred.user.uid), { email, status: "pending" });
-        alert("Signup successful! Please wait for admin approval.");
-        await signOut(auth);
-      } catch (err) { alert("Signup failed: " + err.message); }
-    };
-
-    window.login = async function() {
-      const email = prompt("Enter your email:");
-      const password = prompt("Enter your password:");
-      try {
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCred.user.uid;
-        const userDoc = await getDoc(doc(db, "users", uid));
-
-        if (email === ADMIN_EMAIL || (userDoc.exists() && userDoc.data().status === "approved")) {
-          alert("✅ Welcome " + email);
-          document.getElementById("userEmail").textContent = "Logged in as: " + email;
-          document.getElementById("loginBtn").style.display = "none";
-          document.getElementById("signupBtn").style.display = "none";
-          document.getElementById("logoutBtn").style.display = "inline-block";
-
-          if (email === ADMIN_EMAIL) {
-            document.getElementById("adminTab").style.display = "block";
-            loadUserRequests();
-          }
-          loadMonthlyData(months[new Date().getMonth()]);
-        } else {
-          alert("⚠️ Your account is not approved yet.");
-          await signOut(auth);
-        }
-      } catch (err) { alert("Login failed: " + err.message); }
-    };
-
-    window.logout = async function() {
-      await signOut(auth);
-      alert("Logged out.");
-      document.getElementById("userEmail").textContent = "";
-      document.getElementById("loginBtn").style.display = "inline-block";
-      document.getElementById("signupBtn").style.display = "inline-block";
-      document.getElementById("logoutBtn").style.display = "none";
-      document.getElementById("adminTab").style.display = "none";
-      document.getElementById('monthlyEntryList').innerHTML = '';
-      document.getElementById('monthlyTotal').textContent = '0';
-    };
-
-    async function loadUserRequests() {
-      const querySnap = await getDocs(collection(db, "users"));
-      const userRequestsDiv = document.getElementById("userRequests");
-      userRequestsDiv.innerHTML = "";
-      querySnap.forEach(docSnap => {
-        const u = docSnap.data();
-        const div = document.createElement("div");
-        div.classList.add("entry-item");
-        div.innerHTML = `${u.email} - Status: ${u.status} 
-          <button onclick="approveUser('${docSnap.id}')">Approve</button>
-          <button onclick="rejectUser('${docSnap.id}')">Reject</button>`;
-        userRequestsDiv.appendChild(div);
+    function renderInstituteList(){
+      instituteList.innerHTML="";
+      institutes.forEach(inst=>{
+        let div=document.createElement("div");div.className="entry-item";
+        div.innerHTML=`<div>${inst.name} | ₹${inst.hourlyRate} | TDS:${inst.tds?"Yes":"No"}</div>
+        <div><button onclick="editInstitute('${inst.id}')">✏️</button>
+        <button onclick="deleteInstitute('${inst.id}')">❌</button></div>`;
+        instituteList.appendChild(div);
       });
     }
 
-    window.approveUser = async function(uid) {
-      await updateDoc(doc(db, "users", uid), { status: "approved" });
-      loadUserRequests();
+    instituteSelect.addEventListener("change",()=>{if(instituteSelect.value==="new"){newInstituteFields.style.display="block"}else{newInstituteFields.style.display="none"}});
+
+    window.saveNewInstitute=async function(){
+      const user=auth.currentUser;if(!user)return;
+      const name=document.getElementById("newInstituteName").value.trim();
+      const rate=parseFloat(document.getElementById("newInstituteRate").value);
+      const tds=document.getElementById("newInstituteTds").checked;
+      if(!name||isNaN(rate)){alert("Enter valid institute details");return;}
+      await addDoc(collection(db,"users",user.uid,"institutes"),{name, hourlyRate:rate, tds});
+      document.getElementById("newInstituteName").value="";document.getElementById("newInstituteRate").value="";
+      document.getElementById("newInstituteTds").checked=false;
+      newInstituteFields.style.display="none";loadInstitutes();
     };
 
-    window.rejectUser = async function(uid) {
-      await updateDoc(doc(db, "users", uid), { status: "rejected" });
-      loadUserRequests();
+    window.editInstitute=async function(id){
+      const inst=institutes.find(i=>i.id===id);if(!inst)return;
+      const name=prompt("Institute Name:",inst.name);if(!name)return;
+      const rate=parseFloat(prompt("Hourly Rate:",inst.hourlyRate));if(isNaN(rate))return;
+      const tds=confirm("TDS applicable? OK=Yes Cancel=No");
+      await updateDoc(doc(db,"users",auth.currentUser.uid,"institutes",id),{name, hourlyRate:rate, tds});
+      loadInstitutes();
+    };
+    window.deleteInstitute=async function(id){if(!confirm("Delete institute?"))return;
+      await deleteDoc(doc(db,"users",auth.currentUser.uid,"institutes",id));loadInstitutes();};
+
+    // Calculate hours
+    window.calculateTotalHours=function(){
+      const date=document.getElementById("date").value;
+      const from=document.getElementById("fromTime").value;
+      const to=document.getElementById("toTime").value;
+      const breakM=parseInt(document.getElementById("breakTime").value)||0;
+      let instId=instituteSelect.value;
+      let inst=institutes.find(i=>i.id===instId);
+      if(!date||!from||!to||!inst){alert("Fill all fields and select institute");return;}
+      const start=new Date(`1970-01-01T${from}:00`);const end=new Date(`1970-01-01T${to}:00`);
+      let minutes=(end-start)/60000-breakM;if(minutes<=0){alert("Invalid time");return;}
+      let hours=minutes/60;let salary=hours*inst.hourlyRate;if(inst.tds)salary*=0.9;
+      document.getElementById("totalHours").textContent=hours.toFixed(2);
+      document.getElementById("calculatedSalary").textContent=salary.toFixed(2);
+      document.getElementById("selectedDate").textContent=date;
+      todayData={date, minutes, instituteId:inst.id, instituteName:inst.name, hourlyRate:inst.hourlyRate, tds:inst.tds, day:new Date(date).getDate(), month:new Date(date).getMonth()};
     };
 
-    // init with current month
-    const currentMonth = months[new Date().getMonth()];
-    monthSelect.value = currentMonth;
+    // Save entry
+    window.addToMonthlyRecord=async function(){const user=auth.currentUser;if(!user){alert("Login first");return;}
+      if(!todayData.date){alert("Calculate first");return;}
+      await addDoc(collection(db,"users",user.uid,"entries"),todayData);alert("Saved!");loadMonthlyData(parseInt(monthSelect.value));loadSalaryReport();};
+
+    // Monthly tracker
+    async function loadMonthlyData(month){const user=auth.currentUser;if(!user)return;
+      const snap=await getDocs(collection(db,"users",user.uid,"entries"));let list=document.getElementById("monthlyEntryList");list.innerHTML="";
+      let total=0;snap.forEach(ds=>{let e=ds.data();if(e.month===month){total+=e.minutes;let div=document.createElement("div");div.className="entry-item";
+        div.innerHTML=`<div>${e.date} | ${ (e.minutes/60).toFixed(2)}h | ${e.instituteName}</div><button onclick="deleteEntry('${ds.id}')">Delete</button>`;list.appendChild(div);}});
+      document.getElementById("monthlyTotal").textContent=(total/60).toFixed(2);document.getElementById("monthName").textContent=months[month];}
+    window.loadMonthlyData=loadMonthlyData;
+    window.deleteEntry=async function(id){await deleteDoc(doc(db,"users",auth.currentUser.uid,"entries",id));loadMonthlyData(parseInt(monthSelect.value));loadSalaryReport();};
+    monthSelect.addEventListener("change",()=>loadMonthlyData(parseInt(monthSelect.value)));
+
+    // Salary report
+    async function loadSalaryReport(){const user=auth.currentUser;if(!user)return;
+      const month=parseInt(salaryMonth.value);const snap=await getDocs(collection(db,"users",user.uid,"entries"));
+      let monthly={},all={};let mt=0,at=0; snap.forEach(ds=>{let e=ds.data();let hrs=e.minutes/60;let sal=hrs*e.hourlyRate;if(e.tds)sal*=0.9;
+        if(e.month===month){if(!monthly[e.instituteName])monthly[e.instituteName]={h:0,s:0};monthly[e.instituteName].h+=hrs;monthly[e.instituteName].s+=sal;mt+=sal;}
+        if(!all[e.instituteName])all[e.instituteName]={h:0,s:0};all[e.instituteName].h+=hrs;all[e.instituteName].s+=sal;at+=sal;});
+      let cont=document.getElementById("salaryReport");cont.innerHTML="<h3>Monthly</h3>";
+      for(const k in monthly){cont.innerHTML+=`<div class="entry-item"><div>${k}</div><div>${monthly[k].h.toFixed(2)}h | ₹${monthly[k].s.toFixed(2)}</div></div>`}
+      cont.innerHTML+=`<div class="total-box">Monthly Total: ₹${mt.toFixed(2)}</div><h3>All-time</h3>`;
+      for(const k in all){cont.innerHTML+=`<div class="entry-item"><div>${k}</div><div>${all[k].h.toFixed(2)}h | ₹${all[k].s.toFixed(2)}</div></div>`}
+      cont.innerHTML+=`<div class="total-box">All-time Total: ₹${at.toFixed(2)}</div>`;}
+    window.loadSalaryReport=loadSalaryReport;
+
+    window.downloadCSV=async function(){const user=auth.currentUser;if(!user)return;const month=parseInt(salaryMonth.value);
+      const snap=await getDocs(collection(db,"users",user.uid,"entries"));let csv="Date,Institute,Hours,Salary\n";
+      snap.forEach(ds=>{let e=ds.data();if(e.month===month){let hrs=(e.minutes/60);let sal=hrs*e.hourlyRate;if(e.tds)sal*=0.9;csv+=`${e.date},${e.instituteName},${hrs.toFixed(2)},${sal.toFixed(2)}\n`;}});let blob=new Blob([csv],{type:"text/csv"});
+      let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="salary_report.csv";a.click();};
+
+    // Auth
+    window.signup=async function(){const email=prompt("Email:"),pw=prompt("Password:");try{let c=await createUserWithEmailAndPassword(auth,email,pw);await setDoc(doc(db,"users",c.user.uid),{email,status:"pending"});alert("Signup success. Wait for approval.");await signOut(auth);}catch(e){alert(e.message)}};
+    window.login=async function(){const email=prompt("Email:"),pw=prompt("Password:");try{let c=await signInWithEmailAndPassword(auth,email,pw);let d=await getDoc(doc(db,"users",c.user.uid));
+      if(email===ADMIN_EMAIL|| (d.exists()&&d.data().status==="approved")){document.getElementById("signupBtn").style.display="none";document.getElementById("loginBtn").style.display="none";
+        document.getElementById("logoutBtn").style.display="inline-block";document.getElementById("userEmailDisplay").textContent="Logged in as: "+email;
+        if(email===ADMIN_EMAIL)document.getElementById("adminTab").style.display="block";loadInstitutes();loadMonthlyData(parseInt(monthSelect.value));loadSalaryReport();}
+      else{alert("Not approved yet.");await signOut(auth)}}catch(e){alert(e.message)}};
+    window.logout=async function(){await signOut(auth);location.reload();};
+    async function loadUserRequests(){const q=await getDocs(collection(db,"users"));let d=document.getElementById("userRequests");d.innerHTML="";
+      q.forEach(ds=>{let u=ds.data();let div=document.createElement("div");div.className="entry-item";div.innerHTML=`${u.email} | ${u.status}<span class="admin-actions"><button onclick="approveUser('${ds.id}')">Approve</button><button onclick="rejectUser('${ds.id}')">Reject</button></span>`;d.appendChild(div)});}
+    window.approveUser=async function(uid){await updateDoc(doc(db,"users",uid),{status:"approved"});loadUserRequests();}
+    window.rejectUser=async function(uid){await updateDoc(doc(db,"users",uid),{status:"rejected"});loadUserRequests();}
   </script>
 </body>
 </html>
