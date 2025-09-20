@@ -163,9 +163,10 @@
       institutes=[];instituteSelect.innerHTML="";
       snap.forEach(ds=>{institutes.push({id:ds.id,...ds.data()})});
       institutes.forEach(inst=>{let opt=document.createElement("option");opt.value=inst.id;opt.textContent=inst.name;instituteSelect.appendChild(opt)});
+      // Always add Add New
       let optNew=document.createElement("option");optNew.value="new";optNew.textContent="➕ Add New Institute";instituteSelect.appendChild(optNew);
-
-      // Manage Institutes list
+      if(institutes.length===0){instituteSelect.value="new";document.getElementById("newInstituteForm").style.display="block";}
+      // Manage list
       let list=document.getElementById("institutesList");list.innerHTML="";
       institutes.forEach(inst=>{
         let div=document.createElement("div");div.className="entry-item";
@@ -270,15 +271,15 @@
       const q=await getDocs(collection(db,"users",user.uid,"entries"));let month=months[parseInt(salaryMonth.value)];
       let csv="Date,Institute,Hours,Salary\n";
       q.forEach(ds=>{let e=ds.data();if(e.month===month){let hrs=e.minutes/60;let sal=hrs*e.hourlyRate;if(e.tds)sal*=0.9;
-        csv+=`${e.date},${e.instituteName},${hrs.toFixed(2)},${sal.toFixed(2)}\n`;}});
-      let blob=new Blob([csv],{type:"text/csv"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);
-      a.download="salary_report.csv";a.click();
+        csv+=`${e.date},${e.instituteName},${hrs.toFixed(2)},${sal.toFixed(2)}\n`;}});let blob=new Blob([csv],{type:"text/csv"});
+      let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="salary_report.csv";a.click();
     };
 
     // Auth
     window.signup=async function(){let email=prompt("Email:"),pw=prompt("Password:");
-      try{let c=await createUserWithEmailAndPassword(auth,email,pw);await setDoc(doc(db,"users",c.user.uid),{email,status:"pending"});
-        alert("Signup success. Wait for approval.");await signOut(auth);}catch(e){alert(e.message)}};
+      try{let c=await createUserWithEmailAndPassword(auth,email,pw);
+        await setDoc(doc(db,"users",c.user.uid),{email,status:"pending"});alert("Signup success. Wait for approval.");await signOut(auth);}
+      catch(e){alert(e.message)}};
     window.login=async function(){let email=prompt("Email:"),pw=prompt("Password:");
       try{let c=await signInWithEmailAndPassword(auth,email,pw);let d=await getDoc(doc(db,"users",c.user.uid));
         if(email===ADMIN_EMAIL||(d.exists()&&d.data().status==="approved")){
