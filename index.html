@@ -152,6 +152,43 @@
       .then(() => console.log("Persistence set to local."))
       .catch(err => console.error("Persistence error:", err));
 
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+// After persistence code
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const uid = user.uid;
+    const snap = await getDoc(doc(db, "users", uid));
+
+    if (user.email === ADMIN_EMAIL || (snap.exists() && snap.data().status === "approved")) {
+      // Show logged-in UI
+      document.getElementById("signupBtn").style.display = "none";
+      document.getElementById("loginBtn").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "inline-block";
+      document.getElementById("userEmailDisplay").textContent = "Logged in as: " + user.email;
+
+      if (user.email === ADMIN_EMAIL) {
+        document.getElementById("adminTab").style.display = "block";
+        loadUserRequests();
+      }
+
+      await loadInstitutes();
+      await loadMonthlyData(parseInt(document.getElementById("monthSelect").value));
+      await loadSalaryReport();
+    } else {
+      alert("⚠️ Your account is not approved yet.");
+      await signOut(auth);
+    }
+  } else {
+    // Reset to logged out UI
+    document.getElementById("signupBtn").style.display = "inline-block";
+    document.getElementById("loginBtn").style.display = "inline-block";
+    document.getElementById("logoutBtn").style.display = "none";
+    document.getElementById("userEmailDisplay").textContent = "";
+    document.getElementById("adminTab").style.display = "none";
+  }
+});
+
     const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
     const monthSelect=document.getElementById("monthSelect");
     const salaryMonth=document.getElementById("salaryMonth");
@@ -312,6 +349,7 @@
   </script>
 </body>
 </html>
+
 
 
 
