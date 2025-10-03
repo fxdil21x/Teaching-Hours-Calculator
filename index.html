@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Teaching Hours Calculator</title>
   <style>
@@ -21,7 +21,7 @@
     input,select,button{width:80%;padding:12px;margin:10px 0;font-size:1rem;border-radius:8px;border:none;
       background-color:#f0f0f0;color:#333}
     button{background-color:#2575fc;color:white;font-size:1.1rem;cursor:pointer;transition:all .3s ease}
-    button:hover{background-color:#6a11cb;transform:scale(1.05)}
+    button:hover{background-color:#6a11cb;transform:scale(1.03)}
     .result{margin-top:20px;font-size:1.2rem;background:rgba(0,0,0,0.5);padding:12px;border-radius:12px;color:#FFD700}
     .entry-list{margin-top:20px;max-height:300px;overflow-y:auto;text-align:left}
     .entry-item{background:rgba(0,0,0,0.4);padding:12px;margin-bottom:10px;border-radius:8px;display:flex;
@@ -34,10 +34,10 @@
     .admin-actions button{margin-left:5px;background:#2575fc;color:white;border:none;padding:5px 8px;border-radius:5px}
     .admin-actions button:hover{background:#6a11cb}
     #institutesList .entry-item button { background:#2575fc; margin-left:6px; }
+    small.hint { display:block; color:#ddd; margin-top:6px; font-size:0.9rem; }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h1>Teaching Hours Calculator</h1>
     <div class="tabs">
@@ -60,7 +60,6 @@
         <label for="breakTime">Break Time (minutes):</label><br>
         <input type="number" id="breakTime" min="0" value="0" required><br>
 
-        <!-- Institute Dropdown -->
         <label for="instituteSelect">Institute:</label><br>
         <select id="instituteSelect"></select>
         <div id="newInstituteForm" style="display:none; margin-top:10px;">
@@ -69,12 +68,13 @@
           <label><input type="checkbox" id="instTds"> TDS Applicable (10%)</label><br>
           <button type="button" onclick="saveNewInstitute()">Save Institute</button>
         </div>
+
         <button type="button" onclick="calculateTotalHours()">Calculate</button>
       </form>
 
       <div id="result" class="result">
         <p>Total Teaching Hours: <span id="totalHours">0</span></p>
-        <p>Salary: <span id="calculatedSalary">0</span></p>
+        <p>Salary: ₹<span id="calculatedSalary">0</span></p>
         <p>Date: <span id="selectedDate"></span></p>
         <button type="button" onclick="addToMonthlyRecord()">Add to Monthly Record</button>
       </div>
@@ -117,6 +117,7 @@
     <button id="signupBtn" onclick="signup()">Sign Up</button>
     <button id="loginBtn" onclick="login()">Login</button>
     <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+    <small class="hint">Admin email: Fadilrafeek29@gmail.com</small>
   </div>
 
   <div class="footer">
@@ -125,7 +126,7 @@
 
   <!-- Firebase & Script -->
   <script type="module">
-    // Firebase imports
+    // Imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import {
       getAuth,
@@ -148,7 +149,7 @@
       deleteDoc
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-    // Config
+    // Firebase config (from your project)
     const firebaseConfig = {
       apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
       authDomain: "teaching-hours-ae6a1.firebaseapp.com",
@@ -161,38 +162,35 @@
 
     const ADMIN_EMAIL = "Fadilrafeek29@gmail.com";
 
-    // Init
+    // Init app, auth, db
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Persistence so user stays logged in until they click logout
+    // Persistence so user stays logged in until they click Logout
     setPersistence(auth, browserLocalPersistence)
-      .then(() => console.log("Auth persistence: local"))
+      .then(() => console.log("Auth persistence set to local"))
       .catch(err => console.error("Auth persistence error:", err));
 
-    // UI references
+    // UI refs
     const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const monthSelect = document.getElementById("monthSelect");
     const salaryMonth = document.getElementById("salaryMonth");
     const instituteSelect = document.getElementById("instituteSelect");
 
-    // Populate month selects (value is index)
-    months.forEach((m,i) => {
+    // populate months
+    months.forEach((m, i) => {
       const o = document.createElement("option"); o.value = i; o.textContent = m; monthSelect.appendChild(o);
       const o2 = document.createElement("option"); o2.value = i; o2.textContent = m; salaryMonth.appendChild(o2);
     });
+    monthSelect.value = new Date().getMonth();
+    salaryMonth.value = new Date().getMonth();
 
-    // Default to current month
-    const currentMonth = new Date().getMonth();
-    monthSelect.value = currentMonth;
-    salaryMonth.value = currentMonth;
-
-    // State
+    // state
     let institutes = [];
     let todayData = {};
 
-    // Tab switching
+    // Tabs switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -202,42 +200,42 @@
       });
     });
 
-    // instituteSelect change
+    // show/hide new institute form
     instituteSelect.addEventListener("change", () => {
       document.getElementById("newInstituteForm").style.display = (instituteSelect.value === "new") ? "block" : "none";
     });
 
-    // AUTH STATE LISTENER — ensures UI stays logged in after refresh
+    // ---------------- auth state listener (restores UI on refresh) ----------------
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // user remembered by persistence
-        const uid = user.uid;
-        const snap = await getDoc(doc(db, "users", uid));
-
-        // If admin or approved user -> show UI
-        if (user.email === ADMIN_EMAIL || (snap.exists() && snap.data().status === "approved")) {
-          document.getElementById("signupBtn").style.display = "none";
-          document.getElementById("loginBtn").style.display = "none";
-          document.getElementById("logoutBtn").style.display = "inline-block";
-          document.getElementById("userEmailDisplay").textContent = "Logged in as: " + user.email;
-
-          if (user.email === ADMIN_EMAIL) {
-            document.getElementById("adminTab").style.display = "block";
-            loadUserRequests();
+        // check user record for approval
+        try {
+          const udoc = await getDoc(doc(db, "users", user.uid));
+          if (user.email === ADMIN_EMAIL || (udoc.exists() && udoc.data().status === "approved")) {
+            // show logged-in UI
+            document.getElementById("signupBtn").style.display = "none";
+            document.getElementById("loginBtn").style.display = "none";
+            document.getElementById("logoutBtn").style.display = "inline-block";
+            document.getElementById("userEmailDisplay").textContent = "Logged in as: " + user.email;
+            if (user.email === ADMIN_EMAIL) {
+              document.getElementById("adminTab").style.display = "block";
+              await loadUserRequests();
+            } else {
+              document.getElementById("adminTab").style.display = "none";
+            }
+            await loadInstitutes();
+            await loadMonthlyData(parseInt(monthSelect.value, 10));
+            await loadSalaryReport(parseInt(salaryMonth.value, 10));
           } else {
-            document.getElementById("adminTab").style.display = "none";
+            // not approved -> sign out
+            alert("⚠️ Your account is not approved yet.");
+            await signOut(auth);
           }
-
-          await loadInstitutes();
-          await loadMonthlyData(parseInt(monthSelect.value, 10));
-          await loadSalaryReport(parseInt(salaryMonth.value, 10));
-        } else {
-          // not approved — sign out
-          alert("⚠️ Your account is not approved yet.");
-          await signOut(auth);
+        } catch (err) {
+          console.error("Error in auth state handler:", err);
         }
       } else {
-        // logged out UI state
+        // logged out UI
         document.getElementById("signupBtn").style.display = "inline-block";
         document.getElementById("loginBtn").style.display = "inline-block";
         document.getElementById("logoutBtn").style.display = "none";
@@ -266,7 +264,6 @@
         opt.textContent = inst.name;
         instituteSelect.appendChild(opt);
       });
-      // always add Add New option
       const optNew = document.createElement("option");
       optNew.value = "new";
       optNew.textContent = "➕ Add New Institute";
@@ -279,7 +276,7 @@
         document.getElementById("newInstituteForm").style.display = "none";
       }
 
-      // show list with edit/delete
+      // render management list
       const list = document.getElementById("institutesList");
       list.innerHTML = "";
       institutes.forEach(inst => {
@@ -300,7 +297,7 @@
       const name = document.getElementById("instName").value.trim();
       const rate = parseFloat(document.getElementById("instRate").value);
       const tds = document.getElementById("instTds").checked;
-      if (!name || !rate) { alert("Fill details"); return; }
+      if (!name || !rate) { alert("Fill institute name & hourly rate"); return; }
       await addDoc(collection(db, "users", user.uid, "institutes"), { name, hourlyRate: rate, tds });
       document.getElementById("instName").value = "";
       document.getElementById("instRate").value = "";
@@ -384,7 +381,6 @@
     async function loadMonthlyData(monthIdx) {
       const user = auth.currentUser;
       if (!user) return;
-      // ensure monthIdx is a number
       monthIdx = parseInt(monthIdx, 10);
       const snap = await getDocs(collection(db, "users", user.uid, "entries"));
       const entries = [];
@@ -468,12 +464,6 @@
     }
     window.loadSalaryReport = loadSalaryReport;
 
-    function downloadCSV() {
-      const user = auth.currentUser;
-      if (!user) return;
-      downloadCSVForMonth(parseInt(salaryMonth.value, 10));
-    }
-
     async function downloadCSVForMonth(monthIdx) {
       const user = auth.currentUser;
       if (!user) return;
@@ -494,6 +484,10 @@
       a.href = URL.createObjectURL(blob);
       a.download = `salary_${months[monthIdx]}.csv`;
       a.click();
+    }
+
+    function downloadCSV() {
+      downloadCSVForMonth(parseInt(salaryMonth.value, 10));
     }
 
     // ---------------- Auth functions ----------------
@@ -519,8 +513,8 @@
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const udoc = await getDoc(doc(db, "users", cred.user.uid));
         if (email === ADMIN_EMAIL || (udoc.exists() && udoc.data().status === "approved")) {
-          // UI updated by onAuthStateChanged listener
-          // but we call these loads explicitly to be sure
+          // authenticated: onAuthStateChanged will update UI and load data
+          // but call loads explicitly to be responsive
           await loadInstitutes();
           await loadMonthlyData(parseInt(monthSelect.value, 10));
           await loadSalaryReport(parseInt(salaryMonth.value, 10));
@@ -535,11 +529,11 @@
 
     window.logout = async function(){
       await signOut(auth);
-      // onAuthStateChanged will set UI to logged out; reload ensures everything cleared
+      // reload clears UI and ensures fresh state
       location.reload();
     };
 
-    // ---------------- Admin requests ----------------
+    // ---------------- Admin functions ----------------
     async function loadUserRequests(){
       const q = await getDocs(collection(db, "users"));
       const container = document.getElementById("userRequests");
@@ -571,11 +565,7 @@
     monthSelect.addEventListener("change", () => loadMonthlyData(parseInt(monthSelect.value, 10)));
     salaryMonth.addEventListener("change", () => loadSalaryReport(parseInt(salaryMonth.value, 10)));
 
-    // Set initial months display names if elements exist
-    document.getElementById("monthName")?.textContent = months[parseInt(monthSelect.value, 10)];
-
-    // Set default visible month data if already logged in (auth listener will call loads)
-    // End of module script
+    // done
   </script>
 </body>
 </html>
