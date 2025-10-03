@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Teaching Hours Calculator</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -33,6 +33,7 @@
     #auth-section{margin-top:20px;text-align:center}
     .admin-actions button{margin-left:5px;background:#2575fc;color:white;border:none;padding:5px 8px;border-radius:5px}
     .admin-actions button:hover{background:#6a11cb}
+    #institutesList .entry-item button { background:#2575fc; margin-left:6px; }
   </style>
 </head>
 <body>
@@ -49,7 +50,7 @@
     <!-- Calculate Hours -->
     <div id="today" class="tab-content active">
       <h2>Calculate Total Hours</h2>
-      <form id="todayForm">
+      <form id="todayForm" onsubmit="return false;">
         <label for="date">Select Date:</label><br>
         <input type="date" id="date" required><br>
         <label for="fromTime">From Time:</label><br>
@@ -57,15 +58,15 @@
         <label for="toTime">To Time:</label><br>
         <input type="time" id="toTime" required><br>
         <label for="breakTime">Break Time (minutes):</label><br>
-        <input type="number" id="breakTime" min="0" required><br>
+        <input type="number" id="breakTime" min="0" value="0" required><br>
 
         <!-- Institute Dropdown -->
         <label for="instituteSelect">Institute:</label><br>
         <select id="instituteSelect"></select>
-        <div id="newInstituteForm" style="display:none;">
-          <input type="text" id="instName" placeholder="Institute Name">
-          <input type="number" id="instRate" placeholder="Hourly Rate">
-          <label><input type="checkbox" id="instTds"> TDS Applicable (10%)</label>
+        <div id="newInstituteForm" style="display:none; margin-top:10px;">
+          <input type="text" id="instName" placeholder="Institute Name"><br>
+          <input type="number" id="instRate" placeholder="Hourly Rate"><br>
+          <label><input type="checkbox" id="instTds"> TDS Applicable (10%)</label><br>
           <button type="button" onclick="saveNewInstitute()">Save Institute</button>
         </div>
         <button type="button" onclick="calculateTotalHours()">Calculate</button>
@@ -124,14 +125,30 @@
 
   <!-- Firebase & Script -->
   <script type="module">
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { 
-      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, 
-      setPersistence, browserLocalPersistence 
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      setPersistence,
+      browserLocalPersistence,
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, deleteDoc } 
-      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      updateDoc,
+      collection,
+      addDoc,
+      getDocs,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+    // Config
     const firebaseConfig = {
       apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
       authDomain: "teaching-hours-ae6a1.firebaseapp.com",
@@ -143,213 +160,422 @@
     };
 
     const ADMIN_EMAIL = "Fadilrafeek29@gmail.com";
+
+    // Init
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ✅ Keep users logged in until they click logout
+    // Persistence so user stays logged in until they click logout
     setPersistence(auth, browserLocalPersistence)
-      .then(() => console.log("Persistence set to local."))
-      .catch(err => console.error("Persistence error:", err));
+      .then(() => console.log("Auth persistence: local"))
+      .catch(err => console.error("Auth persistence error:", err));
 
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    // UI references
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const monthSelect = document.getElementById("monthSelect");
+    const salaryMonth = document.getElementById("salaryMonth");
+    const instituteSelect = document.getElementById("instituteSelect");
 
-// After persistence code
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const uid = user.uid;
-    const snap = await getDoc(doc(db, "users", uid));
+    // Populate month selects (value is index)
+    months.forEach((m,i) => {
+      const o = document.createElement("option"); o.value = i; o.textContent = m; monthSelect.appendChild(o);
+      const o2 = document.createElement("option"); o2.value = i; o2.textContent = m; salaryMonth.appendChild(o2);
+    });
 
-    if (user.email === ADMIN_EMAIL || (snap.exists() && snap.data().status === "approved")) {
-      // Show logged-in UI
-      document.getElementById("signupBtn").style.display = "none";
-      document.getElementById("loginBtn").style.display = "none";
-      document.getElementById("logoutBtn").style.display = "inline-block";
-      document.getElementById("userEmailDisplay").textContent = "Logged in as: " + user.email;
+    // Default to current month
+    const currentMonth = new Date().getMonth();
+    monthSelect.value = currentMonth;
+    salaryMonth.value = currentMonth;
 
-      if (user.email === ADMIN_EMAIL) {
-        document.getElementById("adminTab").style.display = "block";
-        loadUserRequests();
+    // State
+    let institutes = [];
+    let todayData = {};
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
+    });
+
+    // instituteSelect change
+    instituteSelect.addEventListener("change", () => {
+      document.getElementById("newInstituteForm").style.display = (instituteSelect.value === "new") ? "block" : "none";
+    });
+
+    // AUTH STATE LISTENER — ensures UI stays logged in after refresh
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // user remembered by persistence
+        const uid = user.uid;
+        const snap = await getDoc(doc(db, "users", uid));
+
+        // If admin or approved user -> show UI
+        if (user.email === ADMIN_EMAIL || (snap.exists() && snap.data().status === "approved")) {
+          document.getElementById("signupBtn").style.display = "none";
+          document.getElementById("loginBtn").style.display = "none";
+          document.getElementById("logoutBtn").style.display = "inline-block";
+          document.getElementById("userEmailDisplay").textContent = "Logged in as: " + user.email;
+
+          if (user.email === ADMIN_EMAIL) {
+            document.getElementById("adminTab").style.display = "block";
+            loadUserRequests();
+          } else {
+            document.getElementById("adminTab").style.display = "none";
+          }
+
+          await loadInstitutes();
+          await loadMonthlyData(parseInt(monthSelect.value, 10));
+          await loadSalaryReport(parseInt(salaryMonth.value, 10));
+        } else {
+          // not approved — sign out
+          alert("⚠️ Your account is not approved yet.");
+          await signOut(auth);
+        }
+      } else {
+        // logged out UI state
+        document.getElementById("signupBtn").style.display = "inline-block";
+        document.getElementById("loginBtn").style.display = "inline-block";
+        document.getElementById("logoutBtn").style.display = "none";
+        document.getElementById("userEmailDisplay").textContent = "";
+        document.getElementById("adminTab").style.display = "none";
+        // clear lists
+        document.getElementById("institutesList").innerHTML = "";
+        document.getElementById("monthlyEntryList").innerHTML = "";
+        document.getElementById("monthlyTotal").textContent = "0";
+        document.getElementById("salaryMonthly").innerHTML = "";
+        document.getElementById("salaryAllTime").innerHTML = "";
+      }
+    });
+
+    // ---------------- Institutes ----------------
+    async function loadInstitutes(){
+      const user = auth.currentUser;
+      if (!user) return;
+      const snap = await getDocs(collection(db, "users", user.uid, "institutes"));
+      institutes = [];
+      instituteSelect.innerHTML = "";
+      snap.forEach(ds => institutes.push({ id: ds.id, ...ds.data() }));
+      institutes.forEach(inst => {
+        const opt = document.createElement("option");
+        opt.value = inst.id;
+        opt.textContent = inst.name;
+        instituteSelect.appendChild(opt);
+      });
+      // always add Add New option
+      const optNew = document.createElement("option");
+      optNew.value = "new";
+      optNew.textContent = "➕ Add New Institute";
+      instituteSelect.appendChild(optNew);
+
+      if (institutes.length === 0) {
+        instituteSelect.value = "new";
+        document.getElementById("newInstituteForm").style.display = "block";
+      } else {
+        document.getElementById("newInstituteForm").style.display = "none";
       }
 
+      // show list with edit/delete
+      const list = document.getElementById("institutesList");
+      list.innerHTML = "";
+      institutes.forEach(inst => {
+        const div = document.createElement("div");
+        div.className = "entry-item";
+        div.innerHTML = `${inst.name} | Rate: ${inst.hourlyRate} | TDS: ${inst.tds ? "Yes" : "No"}
+          <span>
+            <button onclick="editInstitute('${inst.id}')">✏️</button>
+            <button onclick="deleteInstitute('${inst.id}')">❌</button>
+          </span>`;
+        list.appendChild(div);
+      });
+    }
+
+    window.saveNewInstitute = async function(){
+      const user = auth.currentUser;
+      if (!user) { alert("Login to add institutes."); return; }
+      const name = document.getElementById("instName").value.trim();
+      const rate = parseFloat(document.getElementById("instRate").value);
+      const tds = document.getElementById("instTds").checked;
+      if (!name || !rate) { alert("Fill details"); return; }
+      await addDoc(collection(db, "users", user.uid, "institutes"), { name, hourlyRate: rate, tds });
+      document.getElementById("instName").value = "";
+      document.getElementById("instRate").value = "";
+      document.getElementById("instTds").checked = false;
+      document.getElementById("newInstituteForm").style.display = "none";
       await loadInstitutes();
-      await loadMonthlyData(parseInt(document.getElementById("monthSelect").value));
-      await loadSalaryReport();
-    } else {
-      alert("⚠️ Your account is not approved yet.");
+    };
+
+    window.editInstitute = async function(id){
+      const inst = institutes.find(i => i.id === id);
+      if (!inst) return;
+      const name = prompt("Institute name:", inst.name);
+      const rate = prompt("Hourly rate:", inst.hourlyRate);
+      const tds = confirm("Is TDS applicable?");
+      if (!name || !rate) return;
+      await updateDoc(doc(db, "users", auth.currentUser.uid, "institutes", id), { name, hourlyRate: parseFloat(rate), tds });
+      await loadInstitutes();
+    };
+
+    window.deleteInstitute = async function(id){
+      if (!confirm("Delete this institute?")) return;
+      await deleteDoc(doc(db, "users", auth.currentUser.uid, "institutes", id));
+      await loadInstitutes();
+    };
+
+    // ---------------- Calculate Hours ----------------
+    window.calculateTotalHours = function(){
+      const date = document.getElementById("date").value;
+      const fromTime = document.getElementById("fromTime").value;
+      const toTime = document.getElementById("toTime").value;
+      const breakTime = parseInt(document.getElementById("breakTime").value) || 0;
+      const instId = instituteSelect.value;
+      if (!date || !fromTime || !toTime || !instId) { alert("Fill all fields."); return; }
+      if (instId === "new") { alert("Save the new institute first."); return; }
+
+      const from = new Date(`1970-01-01T${fromTime}:00`);
+      const to = new Date(`1970-01-01T${toTime}:00`);
+      let totalMinutes = (to - from) / 60000 - breakTime;
+      if (totalMinutes < 0) { alert("Invalid time range."); return; }
+
+      const hours = (totalMinutes / 60).toFixed(2);
+      const inst = institutes.find(i => i.id === instId);
+      let salary = 0;
+      if (inst) {
+        salary = hours * inst.hourlyRate;
+        if (inst.tds) salary *= 0.9;
+      }
+
+      document.getElementById("totalHours").textContent = hours;
+      document.getElementById("calculatedSalary").textContent = salary.toFixed(2);
+      document.getElementById("selectedDate").textContent = date;
+
+      todayData = {
+        date,
+        minutes: totalMinutes,
+        instituteId: inst?.id,
+        instituteName: inst?.name,
+        hourlyRate: inst?.hourlyRate,
+        tds: inst?.tds
+      };
+    };
+
+    // ---------------- Add Entry ----------------
+    window.addToMonthlyRecord = async function(){
+      const user = auth.currentUser;
+      if (!user) { alert("Please login first."); return; }
+      if (!todayData.date) { alert("Please calculate first."); return; }
+      const d = new Date(todayData.date);
+      const month = months[d.getMonth()];
+      await addDoc(collection(db, "users", user.uid, "entries"), {
+        ...todayData,
+        day: d.getDate(),
+        month
+      });
+      alert("Saved to your account!");
+      await loadMonthlyData(parseInt(monthSelect.value, 10));
+      await loadSalaryReport(parseInt(salaryMonth.value, 10));
+    };
+
+    // ---------------- Monthly Data ----------------
+    async function loadMonthlyData(monthIdx) {
+      const user = auth.currentUser;
+      if (!user) return;
+      // ensure monthIdx is a number
+      monthIdx = parseInt(monthIdx, 10);
+      const snap = await getDocs(collection(db, "users", user.uid, "entries"));
+      const entries = [];
+      snap.forEach(ds => entries.push({ id: ds.id, ...ds.data() }));
+      const monthName = months[monthIdx];
+      const filtered = entries.filter(e => e.month === monthName);
+      const list = document.getElementById("monthlyEntryList");
+      list.innerHTML = "";
+      let totalMinutes = 0;
+      filtered.sort((a, b) => a.day - b.day).forEach(e => {
+        totalMinutes += e.minutes;
+        const hrs = (e.minutes / 60).toFixed(2);
+        const div = document.createElement("div");
+        div.className = "entry-item";
+        div.innerHTML = `<span>Day ${e.day} (${e.instituteName}): ${hrs}h</span>
+                         <button onclick="deleteEntry('${e.id}')">❌</button>`;
+        list.appendChild(div);
+      });
+      document.getElementById("monthlyTotal").textContent = (totalMinutes / 60).toFixed(2);
+      document.getElementById("monthName").textContent = monthName;
+    }
+    window.loadMonthlyData = loadMonthlyData;
+
+    window.deleteEntry = async function(id){
+      const user = auth.currentUser;
+      if (!user) return;
+      await deleteDoc(doc(db, "users", user.uid, "entries", id));
+      await loadMonthlyData(parseInt(monthSelect.value, 10));
+      await loadSalaryReport(parseInt(salaryMonth.value, 10));
+    };
+
+    // ---------------- Salary Report ----------------
+    async function loadSalaryReport(monthIdx) {
+      const user = auth.currentUser;
+      if (!user) return;
+      monthIdx = parseInt(monthIdx, 10);
+      const snap = await getDocs(collection(db, "users", user.uid, "entries"));
+      const arr = [];
+      snap.forEach(ds => arr.push(ds.data()));
+
+      const monthName = months[monthIdx];
+      const monthly = arr.filter(e => e.month === monthName);
+      const grouped = {};
+      monthly.forEach(e => {
+        const hrs = e.minutes / 60;
+        let sal = hrs * e.hourlyRate;
+        if (e.tds) sal *= 0.9;
+        if (!grouped[e.instituteName]) grouped[e.instituteName] = { hours: 0, salary: 0 };
+        grouped[e.instituteName].hours += hrs;
+        grouped[e.instituteName].salary += sal;
+      });
+
+      // render monthly
+      const divM = document.getElementById("salaryMonthly");
+      divM.innerHTML = `<h3>${monthName} Breakdown</h3>`;
+      let totalM = 0;
+      Object.keys(grouped).forEach(k => {
+        divM.innerHTML += `<p>${k}: ${grouped[k].hours.toFixed(2)}h — ₹${grouped[k].salary.toFixed(2)}</p>`;
+        totalM += grouped[k].salary;
+      });
+      divM.innerHTML += `<b>Total: ₹${totalM.toFixed(2)}</b>`;
+
+      // all-time
+      const all = {};
+      arr.forEach(e => {
+        const hrs = e.minutes / 60;
+        let sal = hrs * e.hourlyRate;
+        if (e.tds) sal *= 0.9;
+        if (!all[e.instituteName]) all[e.instituteName] = { hours: 0, salary: 0 };
+        all[e.instituteName].hours += hrs;
+        all[e.instituteName].salary += sal;
+      });
+      const divA = document.getElementById("salaryAllTime");
+      divA.innerHTML = `<h3>All-time Breakdown</h3>`;
+      let totalA = 0;
+      Object.keys(all).forEach(k => {
+        divA.innerHTML += `<p>${k}: ${all[k].hours.toFixed(2)}h — ₹${all[k].salary.toFixed(2)}</p>`;
+        totalA += all[k].salary;
+      });
+      divA.innerHTML += `<b>Total: ₹${totalA.toFixed(2)}</b>`;
+    }
+    window.loadSalaryReport = loadSalaryReport;
+
+    function downloadCSV() {
+      const user = auth.currentUser;
+      if (!user) return;
+      downloadCSVForMonth(parseInt(salaryMonth.value, 10));
+    }
+
+    async function downloadCSVForMonth(monthIdx) {
+      const user = auth.currentUser;
+      if (!user) return;
+      monthIdx = parseInt(monthIdx, 10);
+      const snap = await getDocs(collection(db, "users", user.uid, "entries"));
+      let csv = "Date,Institute,Hours,Salary\n";
+      snap.forEach(ds => {
+        const e = ds.data();
+        if (e.month === months[monthIdx]) {
+          const hrs = e.minutes / 60;
+          let sal = hrs * e.hourlyRate;
+          if (e.tds) sal *= 0.9;
+          csv += `${e.date},${e.instituteName},${hrs.toFixed(2)},${sal.toFixed(2)}\n`;
+        }
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `salary_${months[monthIdx]}.csv`;
+      a.click();
+    }
+
+    // ---------------- Auth functions ----------------
+    window.signup = async function(){
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter your password:");
+      if (!email || !password) return;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", cred.user.uid), { email, status: "pending" });
+        alert("Signup successful. Please wait for admin approval.");
+        await signOut(auth);
+      } catch (e) {
+        alert("Signup failed: " + e.message);
+      }
+    };
+
+    window.login = async function(){
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter your password:");
+      if (!email || !password) return;
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const udoc = await getDoc(doc(db, "users", cred.user.uid));
+        if (email === ADMIN_EMAIL || (udoc.exists() && udoc.data().status === "approved")) {
+          // UI updated by onAuthStateChanged listener
+          // but we call these loads explicitly to be sure
+          await loadInstitutes();
+          await loadMonthlyData(parseInt(monthSelect.value, 10));
+          await loadSalaryReport(parseInt(salaryMonth.value, 10));
+        } else {
+          alert("⚠️ Your account is not approved yet.");
+          await signOut(auth);
+        }
+      } catch (e) {
+        alert("Login failed: " + e.message);
+      }
+    };
+
+    window.logout = async function(){
       await signOut(auth);
-    }
-  } else {
-    // Reset to logged out UI
-    document.getElementById("signupBtn").style.display = "inline-block";
-    document.getElementById("loginBtn").style.display = "inline-block";
-    document.getElementById("logoutBtn").style.display = "none";
-    document.getElementById("userEmailDisplay").textContent = "";
-    document.getElementById("adminTab").style.display = "none";
-  }
-});
+      // onAuthStateChanged will set UI to logged out; reload ensures everything cleared
+      location.reload();
+    };
 
-    const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const monthSelect=document.getElementById("monthSelect");
-    const salaryMonth=document.getElementById("salaryMonth");
-    months.forEach((m,i)=>{let o=document.createElement("option");o.value=i;o.textContent=m;monthSelect.appendChild(o);
-      let o2=document.createElement("option");o2.value=i;o2.textContent=m;salaryMonth.appendChild(o2);});
-
-    let todayData={},institutes=[];
-    const instituteSelect=document.getElementById("instituteSelect");
-    instituteSelect.addEventListener("change",()=>{document.getElementById("newInstituteForm").style.display=
-      instituteSelect.value==="new"?"block":"none";});
-
-    // Load Institutes
-    async function loadInstitutes(){
-      const user=auth.currentUser;if(!user)return;
-      const snap=await getDocs(collection(db,"users",user.uid,"institutes"));
-      institutes=[];instituteSelect.innerHTML="";
-      snap.forEach(ds=>{institutes.push({id:ds.id,...ds.data()})});
-      institutes.forEach(inst=>{let opt=document.createElement("option");opt.value=inst.id;opt.textContent=inst.name;instituteSelect.appendChild(opt)});
-      // Always add Add New
-      let optNew=document.createElement("option");optNew.value="new";optNew.textContent="➕ Add New Institute";instituteSelect.appendChild(optNew);
-      if(institutes.length===0){instituteSelect.value="new";document.getElementById("newInstituteForm").style.display="block";}
-      // Manage list
-      let list=document.getElementById("institutesList");list.innerHTML="";
-      institutes.forEach(inst=>{
-        let div=document.createElement("div");div.className="entry-item";
-        div.innerHTML=`${inst.name} | Rate: ${inst.hourlyRate} | TDS: ${inst.tds?"Yes":"No"}
-        <span><button onclick="editInstitute('${inst.id}')">✏️</button>
-        <button onclick="deleteInstitute('${inst.id}')">❌</button></span>`;
-        list.appendChild(div);
+    // ---------------- Admin requests ----------------
+    async function loadUserRequests(){
+      const q = await getDocs(collection(db, "users"));
+      const container = document.getElementById("userRequests");
+      container.innerHTML = "";
+      q.forEach(ds => {
+        const u = ds.data();
+        const div = document.createElement("div");
+        div.className = "entry-item";
+        div.innerHTML = `${u.email} | ${u.status}
+          <span>
+            <button onclick="approveUser('${ds.id}')">Approve</button>
+            <button onclick="rejectUser('${ds.id}')">Reject</button>
+          </span>`;
+        container.appendChild(div);
       });
     }
 
-    window.saveNewInstitute=async function(){
-      const user=auth.currentUser;if(!user)return;
-      let name=document.getElementById("instName").value;
-      let rate=parseFloat(document.getElementById("instRate").value);
-      let tds=document.getElementById("instTds").checked;
-      if(!name||!rate){alert("Fill details");return;}
-      await addDoc(collection(db,"users",user.uid,"institutes"),{name,hourlyRate:rate,tds});
-      document.getElementById("newInstituteForm").style.display="none";
-      loadInstitutes();
+    window.approveUser = async function(uid){
+      await updateDoc(doc(db, "users", uid), { status: "approved" });
+      await loadUserRequests();
     };
 
-    window.editInstitute=async function(id){
-      let inst=institutes.find(x=>x.id===id);if(!inst)return;
-      let name=prompt("Name:",inst.name);
-      let rate=prompt("Hourly Rate:",inst.hourlyRate);
-      let tds=confirm("TDS applicable?");
-      await updateDoc(doc(db,"users",auth.currentUser.uid,"institutes",id),{name,hourlyRate:parseFloat(rate),tds});
-      loadInstitutes();
+    window.rejectUser = async function(uid){
+      await updateDoc(doc(db, "users", uid), { status: "rejected" });
+      await loadUserRequests();
     };
 
-    window.deleteInstitute=async function(id){
-      await deleteDoc(doc(db,"users",auth.currentUser.uid,"institutes",id));
-      loadInstitutes();
-    };
+    // ---------------- UI event handlers ----------------
+    monthSelect.addEventListener("change", () => loadMonthlyData(parseInt(monthSelect.value, 10)));
+    salaryMonth.addEventListener("change", () => loadSalaryReport(parseInt(salaryMonth.value, 10)));
 
-    // Calculate Hours
-    window.calculateTotalHours=function(){
-      const date=document.getElementById("date").value;
-      const fromTime=document.getElementById("fromTime").value;
-      const toTime=document.getElementById("toTime").value;
-      const breakTime=parseInt(document.getElementById("breakTime").value);
-      if(!date||!fromTime||!toTime||!instituteSelect.value){alert("Fill all fields");return;}
-      const from=new Date(`1970-01-01T${fromTime}:00`),to=new Date(`1970-01-01T${toTime}:00`);
-      let totalMinutes=(to-from)/60000-breakTime;if(totalMinutes<0){alert("Invalid range");return;}
-      let hours=(totalMinutes/60).toFixed(2);
-      let inst=institutes.find(x=>x.id===instituteSelect.value);
-      let salary=0;if(inst){salary=hours*inst.hourlyRate;if(inst.tds)salary*=0.9;}
-      document.getElementById("totalHours").textContent=hours+" hours";
-      document.getElementById("calculatedSalary").textContent=salary.toFixed(2);
-      document.getElementById("selectedDate").textContent=date;
-      todayData={date,minutes:totalMinutes,instituteId:inst?.id,instituteName:inst?.name,hourlyRate:inst?.hourlyRate,tds:inst?.tds};
-    };
+    // Set initial months display names if elements exist
+    document.getElementById("monthName")?.textContent = months[parseInt(monthSelect.value, 10)];
 
-    // Add to record
-    window.addToMonthlyRecord=async function(){
-      const user=auth.currentUser;if(!user){alert("Login first");return;}
-      if(!todayData.date){alert("Calculate first");return;}
-      const dateObj=new Date(todayData.date);const month=months[dateObj.getMonth()];
-      await addDoc(collection(db,"users",user.uid,"entries"),{...todayData,day:dateObj.getDate(),month});
-      alert("Saved");loadMonthlyData(parseInt(monthSelect.value));loadSalaryReport();
-    };
-
-    // Monthly Tracker
-    async function loadMonthlyData(monthIdx){
-      const user=auth.currentUser;if(!user)return;
-      const q=await getDocs(collection(db,"users",user.uid,"entries"));let arr=[];
-      q.forEach(ds=>arr.push({id:ds.id,...ds.data()}));
-      const month=months[monthIdx];let filtered=arr.filter(e=>e.month===month);
-      let list=document.getElementById("monthlyEntryList");list.innerHTML="";let total=0;
-      filtered.sort((a,b)=>a.day-b.day).forEach(e=>{
-        total+=e.minutes;let hrs=(e.minutes/60).toFixed(2);
-        let div=document.createElement("div");div.className="entry-item";
-        div.innerHTML=`Day ${e.day} (${e.instituteName}): ${hrs}h <button onclick="deleteEntry('${e.id}')">❌</button>`;
-        list.appendChild(div);
-      });
-      document.getElementById("monthlyTotal").textContent=(total/60).toFixed(2)+" hours";
-      document.getElementById("monthName").textContent=month;
-    }
-    window.deleteEntry=async function(id){await deleteDoc(doc(db,"users",auth.currentUser.uid,"entries",id));
-      loadMonthlyData(parseInt(monthSelect.value));loadSalaryReport();};
-
-    // Salary Report
-    async function loadSalaryReport(){
-      const user=auth.currentUser;if(!user)return;
-      const q=await getDocs(collection(db,"users",user.uid,"entries"));let arr=[];
-      q.forEach(ds=>arr.push(ds.data()));
-      let mIdx=parseInt(salaryMonth.value),month=months[mIdx];
-      let monthly=arr.filter(e=>e.month===month),all={};
-      let divM=document.getElementById("salaryMonthly"),divA=document.getElementById("salaryAllTime");
-      divM.innerHTML="<h3>"+month+" Breakdown</h3>";let totalM=0;
-      let groupedM={};monthly.forEach(e=>{let hrs=e.minutes/60;let sal=hrs*e.hourlyRate;if(e.tds)sal*=0.9;
-        groupedM[e.instituteName]=(groupedM[e.instituteName]||0)+sal;totalM+=sal;});
-      for(let k in groupedM){divM.innerHTML+=`${k}: ₹${groupedM[k].toFixed(2)}<br>`}
-      divM.innerHTML+=`<b>Total: ₹${totalM.toFixed(2)}</b>`;
-      divA.innerHTML="<h3>All-time Breakdown</h3>";let totalA=0;
-      arr.forEach(e=>{let hrs=e.minutes/60;let sal=hrs*e.hourlyRate;if(e.tds)sal*=0.9;all[e.instituteName]=(all[e.instituteName]||0)+sal;totalA+=sal;});
-      for(let k in all){divA.innerHTML+=`${k}: ₹${all[k].toFixed(2)}<br>`}
-      divA.innerHTML+=`<b>Total: ₹${totalA.toFixed(2)}</b>`;
-    }
-    window.downloadCSV=async function(){
-      const user=auth.currentUser;if(!user)return;
-      const q=await getDocs(collection(db,"users",user.uid,"entries"));let month=months[parseInt(salaryMonth.value)];
-      let csv="Date,Institute,Hours,Salary\n";
-      q.forEach(ds=>{let e=ds.data();if(e.month===month){let hrs=e.minutes/60;let sal=hrs*e.hourlyRate;if(e.tds)sal*=0.9;
-        csv+=`${e.date},${e.instituteName},${hrs.toFixed(2)},${sal.toFixed(2)}\n`;}});let blob=new Blob([csv],{type:"text/csv"});
-      let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="salary_report.csv";a.click();
-    };
-
-    // Auth
-    window.signup=async function(){let email=prompt("Email:"),pw=prompt("Password:");
-      try{let c=await createUserWithEmailAndPassword(auth,email,pw);
-        await setDoc(doc(db,"users",c.user.uid),{email,status:"pending"});alert("Signup success. Wait for approval.");await signOut(auth);}
-      catch(e){alert(e.message)}};
-    window.login=async function(){let email=prompt("Email:"),pw=prompt("Password:");
-      try{let c=await signInWithEmailAndPassword(auth,email,pw);let d=await getDoc(doc(db,"users",c.user.uid));
-        if(email===ADMIN_EMAIL||(d.exists()&&d.data().status==="approved")){
-          document.getElementById("signupBtn").style.display="none";document.getElementById("loginBtn").style.display="none";
-          document.getElementById("logoutBtn").style.display="inline-block";document.getElementById("userEmailDisplay").textContent="Logged in as: "+email;
-          if(email===ADMIN_EMAIL){document.getElementById("adminTab").style.display="block";loadUserRequests();}
-          await loadInstitutes();await loadMonthlyData(parseInt(monthSelect.value));await loadSalaryReport();
-        }else{alert("Not approved yet.");await signOut(auth)}}catch(e){alert(e.message)}};
-    window.logout=async function(){await signOut(auth);location.reload();};
-    async function loadUserRequests(){const q=await getDocs(collection(db,"users"));let d=document.getElementById("userRequests");d.innerHTML="";
-      q.forEach(ds=>{let u=ds.data();let div=document.createElement("div");div.className="entry-item";
-        div.innerHTML=`${u.email} | ${u.status}<span class="admin-actions"><button onclick="approveUser('${ds.id}')">Approve</button><button onclick="rejectUser('${ds.id}')">Reject</button></span>`;d.appendChild(div)});}
-    window.approveUser=async function(uid){await updateDoc(doc(db,"users",uid),{status:"approved"});loadUserRequests();}
-    window.rejectUser=async function(uid){await updateDoc(doc(db,"users",uid),{status:"rejected"});loadUserRequests();}
-
-    // Tabs
-    document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',function(){
-      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-      this.classList.add('active');document.getElementById(this.dataset.tab).classList.add('active');
-    })});
-    const currentMonth=new Date().getMonth();monthSelect.value=currentMonth;salaryMonth.value=currentMonth;
+    // Set default visible month data if already logged in (auth listener will call loads)
+    // End of module script
   </script>
 </body>
 </html>
-
-
-
-
