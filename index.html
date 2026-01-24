@@ -116,7 +116,6 @@
     <span id="userEmailDisplay"></span><br>
     <button id="signupBtn" onclick="signup()">Sign Up</button>
     <button id="loginBtn" onclick="login()">Login</button>
-    <button onclick="forgotPassword()">Forgot Password?</button>
     <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
     <small class="hint">Admin email: Fadilrafeek29@gmail.com</small>
   </div>
@@ -137,7 +136,6 @@
       setPersistence,
       browserLocalPersistence,
       onAuthStateChanged
-      sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
     import {
       getFirestore,
@@ -568,19 +566,6 @@
     salaryMonth.addEventListener("change", () => loadSalaryReport(parseInt(salaryMonth.value, 10)));
 
     // done
-    // 🔐 Forgot Password
-window.forgotPassword = async function () {
-  const email = prompt("Enter your registered email:");
-  if (!email) return;
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    alert("✅ Password reset link sent to your email.");
-  } catch (error) {
-    alert("❌ " + error.message);
-  }
-};
   </script>
 </body>
 </html>
-
