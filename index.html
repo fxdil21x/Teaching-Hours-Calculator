@@ -116,6 +116,7 @@
     <span id="userEmailDisplay"></span><br>
     <button id="signupBtn" onclick="signup()">Sign Up</button>
     <button id="loginBtn" onclick="login()">Login</button>
+    <button id="forgotBtn" onclick="forgotPassword()">Forgot Password?</button>
     <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
     <small class="hint">Admin email: Fadilrafeek29@gmail.com</small>
   </div>
@@ -136,6 +137,7 @@
       setPersistence,
       browserLocalPersistence,
       onAuthStateChanged
+      sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
     import {
       getFirestore,
@@ -148,7 +150,18 @@
       getDocs,
       deleteDoc
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+window.forgotPassword = async function () {
+      const email = prompt("Enter your registered email:");
+      if (!email) return;
 
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert("📧 Password reset link sent to your email.\nCheck inbox or spam folder.");
+      } catch (error) {
+        alert("❌ " + error.message);
+      }
+    };
+    
     // Firebase config (from your project)
     const firebaseConfig = {
       apiKey: "AIzaSyCvfzVvhv3lDC4rzJvgbMXJK-trh65Eg1M",
@@ -569,3 +582,4 @@
   </script>
 </body>
 </html>
+
